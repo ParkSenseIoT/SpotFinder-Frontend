@@ -1,29 +1,29 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [provideRouter([])],
     }).compileComponents();
   });
 
-  it('should create the app', () => {
+  it('crea el componente raíz de la PWA SpotFinder', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it(`should have the 'spotfinder-web' title`, () => {
+  it("expone el title 'spotfinder-web' usado como nombre de la PWA", () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('spotfinder-web');
+    expect(fixture.componentInstance.title).toBe('spotfinder-web');
   });
 
-  it('should render title', () => {
+  it('renderiza el <router-outlet> que monta las rutas de los bounded contexts', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, spotfinder-web');
+    expect(compiled.querySelector('router-outlet')).not.toBeNull();
   });
 });
