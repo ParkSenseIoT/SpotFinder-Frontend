@@ -1,0 +1,39 @@
+$border: #2e3636;
+$panel-bg: #151d1d;
+
+:host {
+  display: block;
+  min-height: 260px;
+}
+
+.echarts-instance {
+  height: 280px;
+  width: 100%;
+}
+
+.chart-skeleton {
+  height: 280px;
+  border-radius: 8px;
+  border: 1px dashed $border;
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: stretch;
+  padding: 16px;
+}
+
+.skeleton-block {
+  flex: 1;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(46, 54, 54, 0.4) 25%, rgba(1, 242, 242, 0.06) 50%, rgba(46, 54, 54, 0.4) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
