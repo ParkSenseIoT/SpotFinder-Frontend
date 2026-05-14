@@ -1,0 +1,38 @@
+$text-main: #dbe4e3;
+$text-muted: #8b9d9c;
+$border: #2e3636;
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  border: 1px solid $border;
+  color: $text-main;
+}
+
+.badge--completed {
+  color: #7ee0c3;
+  border-color: rgba(126, 224, 195, 0.45);
+  background: rgba(126, 224, 195, 0.08);
+  box-shadow: 0 0 12px rgba(126, 224, 195, 0.12);
+}
+
+.badge--pending {
+  color: #f5d78e;
+  border-color: rgba(245, 215, 142, 0.45);
+  background: rgba(245, 215, 142, 0.1);
+  box-shadow: 0 0 10px rgba(245, 215, 142, 0.12);
+}
+
+.badge--failed {
+  color: #ffb4ab;
+  border-color: rgba(255, 180, 171, 0.45);
+  background: rgba(255, 180, 171, 0.08);
+  box-shadow: 0 0 12px rgba(255, 180, 171, 0.15);
+}

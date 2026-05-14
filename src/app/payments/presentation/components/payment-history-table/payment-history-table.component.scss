@@ -1,0 +1,119 @@
+$panel-bg: #151d1d;
+$border: #2e3636;
+$cyan: #01f2f2;
+$text-main: #dbe4e3;
+$text-muted: #8b9d9c;
+$red: #ffb4ab;
+
+.inline-error {
+  background: rgba(255, 180, 171, 0.08);
+  border: 1px solid rgba(255, 180, 171, 0.35);
+  color: $red;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 960px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+th {
+  color: $text-muted;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 14px 10px;
+  border-bottom: 1px solid $border;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+td {
+  padding: 14px 10px;
+  border-bottom: 1px solid rgba(46, 54, 54, 0.5);
+  vertical-align: middle;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+  color: $text-muted;
+}
+
+.bold {
+  font-weight: 600;
+  color: $text-main;
+}
+
+.link {
+  color: $cyan;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 12px;
+
+  &:hover {
+    text-shadow: 0 0 8px rgba(1, 242, 242, 0.45);
+  }
+}
+
+.muted {
+  color: $text-muted;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  color: $text-muted;
+  text-align: center;
+
+  .icon-empty {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    opacity: 0.45;
+  }
+
+  h4 {
+    margin: 0 0 8px 0;
+    color: $text-main;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
+.skeleton-row .sk {
+  display: block;
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, rgba(46, 54, 54, 0.45) 25%, rgba(1, 242, 242, 0.06) 50%, rgba(46, 54, 54, 0.45) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+tr:hover td {
+  background: rgba(1, 242, 242, 0.03);
+}
