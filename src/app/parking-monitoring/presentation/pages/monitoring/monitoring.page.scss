@@ -1,0 +1,81 @@
+$bg-dark: #08100f;
+$bg-surface: #151d1d;
+$border: #2e3636;
+$cyan: #01f2f2;
+$red: #ffb4ab;
+$text-dim: #b9cac9;
+
+.monitoring-container {
+  display: flex; flex-direction: column; gap: 24px; height: 100%;
+}
+
+.header-action {
+  display: flex; align-items: center; gap: 16px;
+  h2 { font-size: 20px; font-weight: 600; margin: 0; color: #fff; }
+  .btn-back {
+    background: transparent; border: 1px solid $border; color: $cyan; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; transition: 0.2s;
+    &:hover { background: rgba(1, 242, 242, 0.1); border-color: $cyan; box-shadow: 0 0 10px rgba(1, 242, 242, 0.2); }
+  }
+}
+
+/* MASTER VIEW - TARJETAS */
+.sector-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
+}
+
+.sector-card {
+  background-color: $bg-surface; border: 1px solid $border; border-radius: 6px; padding: 20px; cursor: pointer; transition: all 0.3s;
+  &:hover { border-color: $cyan; box-shadow: 0 0 15px rgba(1, 242, 242, 0.15); transform: translateY(-2px); }
+
+  .card-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+    h3 { margin: 0; font-size: 16px; color: #fff; }
+    .floor-badge { font-size: 10px; background: $bg-dark; padding: 4px 8px; border: 1px solid $border; border-radius: 4px; color: $cyan; }
+  }
+
+  .card-body {
+    .stats { display: flex; justify-content: space-between; font-size: 12px; color: $text-dim; margin-bottom: 8px; .value { font-weight: 600; color: #fff; } }
+    .progress-track { height: 4px; background: $bg-dark; border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: $cyan; box-shadow: 0 0 8px $cyan; transition: width 0.5s ease; }
+  }
+}
+
+/* DETAIL VIEW - 6 SLOTS */
+.parking-detail-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 200px; gap: 30px;
+  background-image: radial-gradient($border 1px, transparent 1px); background-size: 24px 24px; padding: 40px; border: 1px solid $border; border-radius: 8px;
+}
+
+.slot-item {
+  background-color: $bg-dark; border: 1px solid $border; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; transition: all 0.3s;
+  position: relative; /* Clave para el Tooltip */
+
+  .slot-name { font-size: 16px; font-weight: 600; color: $text-dim; }
+  .slot-indicator { width: 16px; height: 16px; border-radius: 50%; background-color: #333; }
+  .slot-status-label { font-size: 11px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; opacity: 0.6; }
+
+  &[data-status="AVAILABLE"] { .slot-indicator { background-color: $cyan; box-shadow: 0 0 12px $cyan; } .slot-status-label { color: $cyan; } }
+  &[data-status="OCCUPIED"] { .slot-indicator { background-color: $red; box-shadow: 0 0 12px rgba(255, 180, 171, 0.4); } border-color: rgba(255, 180, 171, 0.3); }
+  &[data-status="OUT_OF_SERVICE"] { opacity: 0.5; background: repeating-linear-gradient(45deg, $bg-dark, $bg-dark 10px, #111 10px, #111 20px); }
+
+  /* 🌟 ESTILOS DEL TOOLTIP AL HACER HOVER */
+  .hover-tooltip {
+    display: none; position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%);
+    background: rgba(8, 16, 15, 0.95); border: 1px solid $cyan; padding: 12px 16px; border-radius: 4px; width: max-content;
+    z-index: 100; box-shadow: 0 0 20px rgba(1, 242, 242, 0.2); backdrop-filter: blur(4px);
+    flex-direction: column; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+
+    /* El triangulito de abajo */
+    &::after { content: ''; position: absolute; top: 100%; left: 50%; margin-left: -6px; border-width: 6px; border-style: solid; border-color: $cyan transparent transparent transparent; }
+
+    .tooltip-header { color: #fff; font-weight: 700; margin-bottom: 4px; text-align: center; }
+    .tooltip-row { display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid rgba(1, 242, 242, 0.2); padding-bottom: 4px; }
+    .dim { color: $text-dim; }
+    .cyan { color: $cyan; font-weight: 600; text-shadow: 0 0 5px rgba(1, 242, 242, 0.5); }
+  }
+
+  /* ACTIVAR EL TOOLTIP */
+  &:hover .hover-tooltip { display: flex; animation: fadeInUp 0.2s ease-out; }
+}
+
+@keyframes fadeInUp { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }

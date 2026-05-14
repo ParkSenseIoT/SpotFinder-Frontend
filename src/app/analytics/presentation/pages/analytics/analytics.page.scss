@@ -1,0 +1,101 @@
+$bg-dark: #0d1514;
+$panel-bg: #151d1d;
+$border: #2e3636;
+$cyan: #01f2f2;
+$text-main: #dbe4e3;
+$text-muted: #b9cac9;
+$red: #ffb4ab;
+
+.executive-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: $text-main;
+}
+
+.panel {
+  background-color: $panel-bg;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    h3 { margin: 0; font-size: 18px; font-weight: 600; }
+  }
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+
+  .kpi-card {
+    background-color: $panel-bg;
+    border: 1px solid $border;
+    border-radius: 8px;
+    padding: 20px;
+
+    .kpi-header {
+      display: flex; justify-content: space-between; color: $text-muted; font-size: 12px; font-weight: 600; text-transform: uppercase;
+      .cyan { color: $cyan; }
+    }
+
+    .kpi-main {
+      margin: 16px 0;
+      h2 { margin: 0; font-size: 32px; font-weight: 700;
+        .trend { font-size: 14px; color: $cyan; margin-left: 8px; font-weight: 500; }
+        .trend.negative { color: $red; }
+      }
+    }
+
+    .kpi-footer {
+      font-size: 12px; color: $text-muted;
+      .progress-bar { height: 4px; background-color: $border; border-radius: 2px; margin-bottom: 8px; .fill { height: 100%; background-color: $cyan; box-shadow: 0 0 8px $cyan; border-radius: 2px; } }
+      p { margin: 0; }
+      .sub-text { opacity: 0.5; margin-top: 4px; }
+      .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; &.online { background-color: $cyan; box-shadow: 0 0 8px $cyan; } }
+    }
+  }
+}
+
+.middle-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+
+  .toggle-group {
+    display: flex; gap: 4px; background: $bg-dark; padding: 4px; border-radius: 4px; border: 1px solid $border;
+    button { background: transparent; color: $text-muted; border: none; padding: 4px 12px; border-radius: 2px; cursor: pointer; font-size: 12px; font-weight: 600; &.active { background: $cyan; color: #000; } }
+  }
+
+  .chart-container { flex: 1; min-height: 250px; .echarts-instance { height: 100%; width: 100%; } }
+
+  .density-panel {
+    justify-content: space-between;
+    .density-content { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .zone-pill { background-color: rgba(0,0,0,0.3); border: 1px solid $border; padding: 8px 12px; border-radius: 20px; font-size: 12px; display: inline-flex; align-items: center; width: max-content; .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; background-color: $cyan; } &.critical .dot { background-color: $red; box-shadow: 0 0 8px $red; } }
+    .btn-outline { background: transparent; border: 1px solid $border; color: $text-main; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; &:hover { border-color: $cyan; color: $cyan; } }
+  }
+}
+
+.feed-panel {
+  .legend { font-size: 12px; .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 4px 0 12px; &.online { background: $cyan; } &.alert { background: $red; } } }
+
+  table {
+    width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;
+    th { color: $text-muted; text-transform: uppercase; font-weight: 600; padding: 16px 8px; border-bottom: 1px solid $border; font-size: 11px; }
+    td { padding: 16px 8px; border-bottom: 1px solid rgba(46, 54, 54, 0.5); }
+    .mono { font-family: 'JetBrains Mono', monospace; color: $text-muted; }
+    .bold { font-weight: 600; }
+    .granted, .complete { color: $cyan; }
+    .blocked { color: $red; }
+    .logged { color: $text-muted; }
+  }
+  .btn-text { background: transparent; border: none; color: $cyan; margin-top: 16px; font-weight: 600; cursor: pointer; padding: 8px; font-size: 12px; &:hover { text-shadow: 0 0 8px $cyan; } }
+}

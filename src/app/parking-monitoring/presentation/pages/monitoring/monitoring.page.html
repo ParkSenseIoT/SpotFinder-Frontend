@@ -1,0 +1,65 @@
+<div class="monitoring-container">
+
+  @if (!store.selectedSector()) {
+    <div class="header-action">
+      <h2>Facility Overview</h2>
+    </div>
+
+    <div class="sector-grid">
+      @for (sector of store.sectorGroups(); track sector.id) {
+        <div class="sector-card" (click)="store.selectSector(sector)">
+          <div class="card-header">
+            <h3>{{ sector.name }}</h3>
+            <span class="floor-badge">Floor 01</span>
+          </div>
+
+          <div class="card-body">
+            <div class="stats">
+              <span class="label">Occupancy</span>
+              <span class="value">{{ sector.occupiedCount }} / {{ sector.totalCount }}</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill"
+                   [style.width.%]="(sector.occupiedCount / sector.totalCount) * 100">
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (store.selectedSector(); as sector) {
+    <div class="header-action">
+      <button class="btn-back" (click)="store.clearSelection()">
+        <span>◂</span> BACK TO ZONES
+      </button>
+      <h2>{{ sector.name }} - Live View</h2>
+    </div>
+
+    <div class="parking-detail-grid">
+      @for (slot of sector.slots; track slot.id) {
+        <div class="slot-item" [attr.data-status]="slot.status">
+          <span class="slot-name">{{ slot.code }}</span>
+          <div class="slot-indicator"></div>
+          <span class="slot-status-label">{{ slot.status }}</span>
+
+          @if (slot.status === 'OCCUPIED') {
+            <div class="hover-tooltip">
+              <div class="tooltip-header">[ VEHICLE DATA ]</div>
+              <div class="tooltip-row">
+                <span class="dim">PLATE:</span>
+                <span class="cyan">{{ slot.currentPlate }}</span>
+              </div>
+              <div class="tooltip-row">
+                <span class="dim">TIME:</span>
+                <span class="cyan">{{ getStayDuration(slot.entryTime) }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+</div>

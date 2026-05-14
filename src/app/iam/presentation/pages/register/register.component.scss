@@ -1,0 +1,58 @@
+$surface: #0d1514;
+$surface-container-lowest: #08100f;
+$surface-container-low: #151d1d;
+$surface-container-highest: #2e3636;
+$on-surface-variant: #b9cac9;
+$primary-cyan: #01f2f2;
+$on-primary-cyan: #003737;
+$outline-variant: #3a4a49;
+$error-color: #ffb4ab;
+$error-container: #93000a;
+$radius-base: 0.25rem;
+$glow-cyan: 0 0 15px rgba(1, 242, 242, 0.25);
+
+.login-wrapper {
+  min-height: 100vh; width: 100%; display: flex; align-items: center; justify-content: center;
+  background-color: $surface; background-image: radial-gradient(circle at 50% 50%, #152221 0%, $surface 70%);
+  font-family: 'Inter', sans-serif; padding: 24px; box-sizing: border-box;
+}
+
+.login-container {
+  background-color: $surface; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+  padding: 48px 40px; border-radius: $radius-base; width: 100%; max-width: 460px; text-align: center;
+}
+
+.login-header {
+  margin-bottom: 32px;
+  .login-title { font-size: 24px; font-weight: 600; color: #dbe4e3; margin: 0; .text-primary { color: $primary-cyan; text-shadow: 0 0 10px rgba(1, 242, 242, 0.4); } }
+  .login-subtitle { font-size: 14px; color: $on-surface-variant; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.1em; }
+}
+
+.login-form {
+  display: flex; flex-direction: column; gap: 20px; text-align: left;
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .form-group {
+    display: flex; flex-direction: column; gap: 8px;
+    .form-label { font-size: 11px; font-weight: 600; color: $primary-cyan; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.8; }
+    .form-control {
+      font-size: 14px; background-color: $surface-container-lowest; border: 1px solid $outline-variant; color: #dbe4e3; padding: 14px 16px; border-radius: $radius-base; outline: none; transition: all 0.2s ease; font-family: 'JetBrains Mono', monospace;
+      &::placeholder { color: rgba(185, 202, 201, 0.2); font-family: 'Inter', sans-serif; }
+      &:focus { border-color: $primary-cyan; background-color: $surface-container-low; box-shadow: 0 0 0 1px $primary-cyan; }
+      &.ng-invalid.ng-touched { border-color: $error-color; background-color: rgba(147, 0, 10, 0.1); }
+    }
+  }
+
+  .alert-error { background-color: $error-container; color: #ffdad6; padding: 12px; border-radius: $radius-base; font-size: 14px; text-align: center; border: 1px solid $error-color; }
+
+  .btn-primary {
+    background-color: $primary-cyan; color: $on-primary-cyan; padding: 16px; margin-top: 8px; border: none; border-radius: $radius-base; font-size: 14px; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: $glow-cyan;
+    &:hover:not(:disabled) { background-color: #ffffff; box-shadow: 0 0 25px rgba(1, 242, 242, 0.5); transform: translateY(-2px); }
+    &:disabled { background-color: $surface-container-highest; color: $outline-variant; cursor: not-allowed; box-shadow: none; transform: none; }
+  }
+
+  .auth-links { margin-top: 16px; text-align: center; font-size: 12px; .text-muted { color: $on-surface-variant; margin-right: 8px; } .link-cyan { color: $primary-cyan; text-decoration: none; font-weight: 600; &:hover { text-shadow: 0 0 8px $primary-cyan; } } }
+}
+
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(0, 55, 55, 0.2); border-radius: 50%; border-top-color: $on-primary-cyan; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

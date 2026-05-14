@@ -1,0 +1,214 @@
+/* --- Cyber-Industrial Design System Tokens (Full Palette) --- */
+$background: #0d1514;
+$surface-container-lowest: #08100f;
+$surface-container-low: #151d1d;
+$surface-container: #192121;
+$surface-container-high: #232c2b;
+$surface-container-highest: #2e3636;
+
+$on-surface: #dbe4e3;
+$on-surface-variant: #b9cac9;
+
+$primary-cyan: #01f2f2; /* Electric Cyan */
+$on-primary-cyan: #003737;
+
+$outline: #3a4a49;
+$outline-variant: #849493;
+
+$error-color: #ffb4ab;
+$error-container: #93000a;
+
+/* Effects & Shapes */
+$radius-base: 0.25rem; /* 4px base radius */
+$glow-cyan: 0 0 15px rgba(1, 242, 242, 0.25); /* Neon/LED illumination */
+
+.login-wrapper {
+  /* Absolute Center */
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Industrial Dark Background */
+  background-color: $background;
+  background-image:
+    radial-gradient(circle at 50% 50%, #152221 0%, $background 70%); /* Subtle gradient for depth */
+
+  font-family: 'Inter', sans-serif;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.login-container {
+  /* Glassmorphism */
+  background-color: rgba($surface-container, 0.85); /* Slightly less opaque for cleaner merge */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  /* SIN BORDES (Eliminado por petición) */
+  border: none; /* <--- Cambio clave realizado */
+
+  padding: 48px 40px;
+  border-radius: $radius-base;
+  width: 100%;
+  max-width: 420px;
+
+  /* Elevación por Capas Tonal (Sombra actualizada para Panel sin Borde) */
+  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.7);
+  text-align: center;
+}
+
+.login-header {
+  margin-bottom: 32px;
+
+  .login-title {
+    /* display-sm */
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    color: $on-surface;
+    margin: 0;
+
+    .text-primary {
+      color: $primary-cyan;
+      text-shadow: 0 0 10px rgba(1, 242, 242, 0.4);
+    }
+  }
+
+  .login-subtitle {
+    /* body-md */
+    font-size: 14px;
+    color: $on-surface-variant;
+    margin-top: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: left;
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .form-label {
+      /* label-caps */
+      font-size: 11px;
+      font-weight: 600;
+      color: $primary-cyan;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.8;
+    }
+
+    .form-control {
+      /* body-lg */
+      font-size: 16px;
+      background-color: $surface-container-lowest;
+      border: 1px solid $outline;
+      color: $on-surface;
+      padding: 14px 16px;
+      border-radius: $radius-base;
+      outline: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'JetBrains Mono', monospace; /* Technical feel for input data */
+
+      &::placeholder {
+        color: rgba(185, 202, 201, 0.2);
+        font-family: 'Inter', sans-serif;
+      }
+
+      &:focus {
+        border-color: $primary-cyan;
+        background-color: $surface-container-low;
+        box-shadow: 0 0 0 1px $primary-cyan;
+      }
+
+      &.is-invalid {
+        border-color: $error-color;
+        background-color: rgba(147, 0, 10, 0.1);
+
+        &:focus {
+          box-shadow: 0 0 8px rgba(255, 180, 171, 0.2);
+        }
+      }
+    }
+  }
+
+  .error-text {
+    /* body-sm */
+    font-size: 12px;
+    color: $error-color;
+    margin-top: 4px;
+  }
+
+  .alert-error {
+    background-color: $error-container;
+    color: #ffdad6; /* on-error-container */
+    padding: 12px;
+    border-radius: $radius-base;
+    font-size: 14px;
+    text-align: center;
+    border: 1px solid $error-color;
+  }
+
+  .btn-primary {
+    background-color: $primary-cyan;
+    color: $on-primary-cyan;
+    padding: 16px;
+    margin-top: 12px;
+    border: none;
+    border-radius: $radius-base;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    box-shadow: $glow-cyan;
+
+    &:hover:not(:disabled) {
+      background-color: #ffffff;
+      box-shadow: 0 0 25px rgba(1, 242, 242, 0.5);
+      transform: translateY(-2px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 0 10px rgba(1, 242, 242, 0.4);
+    }
+
+    &:disabled {
+      background-color: $surface-container-highest;
+      color: $outline;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+  }
+}
+
+/* Technical Spinner */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(0, 55, 55, 0.2);
+  border-radius: 50%;
+  border-top-color: $on-primary-cyan;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

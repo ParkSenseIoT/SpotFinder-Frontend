@@ -1,0 +1,155 @@
+/* Variables de la paleta Cyber-Industrial */
+$bg-dark: #08100f;
+$bg-surface: #151d1d;
+$border-color: #2e3636;
+$text-main: #dbe4e3;
+$text-muted: #8b9d9c;
+$cyan: #01f2f2;
+$cyan-dim: rgba(1, 242, 242, 0.08);
+
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-color: $bg-dark;
+  color: $text-main;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+  background-color: $bg-dark;
+  border-right: 1px solid $border-color;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.brand-logo {
+  padding: 24px 20px;
+  h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.05em; color: #fff; }
+  span { font-size: 10px; color: $text-muted; letter-spacing: 0.1em; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+}
+
+.nav-menu {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  overflow-y: auto;
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 24px;
+    color: $text-muted;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+
+    svg { width: 18px; height: 18px; transition: 0.2s; }
+
+    &:hover {
+      color: $text-main;
+      background-color: rgba(255,255,255,0.02);
+      svg { stroke: $text-main; }
+    }
+
+    /* ESTADO ACTIVO AL HACER CLIC */
+    &.active {
+      background-color: $cyan-dim;
+      color: #fff;
+      border-left-color: $cyan;
+      svg { stroke: $cyan; }
+    }
+  }
+}
+
+.user-profile {
+  padding: 20px;
+  border-top: 1px solid $border-color;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+
+  &:hover { background-color: rgba(255,255,255,0.03); }
+
+  .avatar {
+    width: 36px; height: 36px; border-radius: 6px; background-color: $bg-surface; border: 1px solid $border-color;
+    display: flex; align-items: center; justify-content: center;
+    svg { width: 20px; height: 20px; }
+  }
+  .user-info {
+    display: flex; flex-direction: column;
+    .name { font-size: 13px; font-weight: 600; color: #fff; }
+    .role { font-size: 11px; color: $text-muted; }
+  }
+}
+
+/* AREA PRINCIPAL */
+.main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* TOPBAR */
+.topbar {
+  height: 70px;
+  background-color: $bg-dark;
+  border-bottom: 1px solid $border-color;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+
+  .search-box {
+    display: flex; align-items: center; gap: 12px; flex: 1; max-width: 400px;
+    background-color: $bg-surface; border: 1px solid $border-color; border-radius: 6px; padding: 0 16px;
+    svg { width: 16px; height: 16px; color: $text-muted; }
+    input {
+      background: transparent; border: none; color: $text-main; width: 100%; padding: 10px 0; font-size: 13px; outline: none;
+      &::placeholder { color: $text-muted; }
+    }
+    &:focus-within { border-color: $cyan; box-shadow: 0 0 0 1px rgba(1, 242, 242, 0.2); }
+  }
+
+  .topbar-actions {
+    display: flex; align-items: center; gap: 24px;
+
+    .sync-status {
+      display: flex; align-items: center; gap: 8px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: $text-muted; letter-spacing: 0.05em;
+      .dot { width: 6px; height: 6px; border-radius: 50%; background-color: $cyan; box-shadow: 0 0 8px $cyan; }
+      .blink { animation: blinker 2s linear infinite; }
+    }
+
+    .icon-btn {
+      background: transparent; border: none; color: $text-muted; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;
+      svg { width: 20px; height: 20px; }
+      &:hover { color: $cyan; }
+    }
+
+    .system-node {
+      display: flex; flex-direction: column; text-align: right;
+      .sys-title { font-size: 11px; font-weight: 700; color: $cyan; letter-spacing: 0.05em; }
+      .sys-id { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: $text-muted; }
+    }
+  }
+}
+
+.content-area {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background-color: $bg-dark;
+}
+
+@keyframes blinker { 50% { opacity: 0.3; } }

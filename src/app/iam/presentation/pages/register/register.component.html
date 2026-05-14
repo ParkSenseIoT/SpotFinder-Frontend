@@ -1,0 +1,51 @@
+<div class="login-wrapper">
+  <div class="login-container">
+    <div class="login-header">
+      <h1 class="login-title">Spot<span class="text-primary">Finder</span></h1>
+      <p class="login-subtitle">NEW OPERATOR CLEARANCE</p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="login-form">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input type="text" formControlName="firstName" class="form-control" placeholder="John" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input type="text" formControlName="lastName" class="form-control" placeholder="Doe" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" formControlName="email" class="form-control" placeholder="operator@spotfinder.com" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Security Key (Password)</label>
+        <input type="password" formControlName="password" class="form-control" placeholder="••••••••" />
+      </div>
+
+      @if (errorMessage()) {
+        <div class="alert-error">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <button type="submit" class="btn-primary" [disabled]="registerForm.invalid || isLoading()">
+        @if (isLoading()) {
+          <div class="spinner"></div> SECURING COMMLINK...
+        } @else {
+          AUTHORIZE NEW ACCESS
+        }
+      </button>
+
+      <div class="auth-links">
+        <span class="text-muted">Already have a clearance code?</span>
+        <a routerLink="/auth/login" class="link-cyan">Return to Login</a>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,6 @@
+export enum ParkingStatus {
+  FREE = 'FREE',
+  BUSY = 'BUSY',
+  MAINTENANCE = 'MAINTENANCE',
+  SENSOR_OFFLINE = 'SENSOR_OFFLINE'
+}
