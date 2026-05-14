@@ -1,0 +1,111 @@
+$panel-bg: #151d1d;
+$border: #2e3636;
+$cyan: #01f2f2;
+$text-main: #dbe4e3;
+$text-muted: #8b9d9c;
+$red: #ffb4ab;
+$success: #7ee787;
+$warning: #ffb347;
+$font-mono: 'JetBrains Mono', monospace;
+
+.system-health-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.health-card {
+  background-color: rgba(8, 16, 15, 0.5);
+  border: 1px solid $border;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+
+  .health-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    .name {
+      font-size: 0.75rem;
+      color: $text-muted;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-family: $font-mono;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+
+      &.online {
+        background-color: $success;
+        box-shadow: 0 0 6px rgba($success, 0.5);
+      }
+
+      &.warning {
+        background-color: $warning;
+        box-shadow: 0 0 6px rgba($warning, 0.45);
+      }
+
+      &.offline {
+        background-color: $red;
+        box-shadow: 0 0 6px rgba($red, 0.45);
+      }
+    }
+  }
+
+  .health-body {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+
+    .value {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: $text-main;
+      font-family: $font-mono;
+
+      .unit {
+        font-size: 0.85rem;
+        color: $text-muted;
+        margin-left: 2px;
+        font-weight: 500;
+      }
+    }
+
+    .trend {
+      font-size: 0.85rem;
+      font-weight: 700;
+
+      &.up {
+        color: $warning;
+      }
+
+      &.down {
+        color: $success;
+      }
+
+      &.stable {
+        color: $text-muted;
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .system-health-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .system-health-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

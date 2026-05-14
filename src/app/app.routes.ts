@@ -28,7 +28,7 @@ export const routes: Routes = [
 
       { path: 'access-control', loadComponent: () => import('./analytics/presentation/pages/analytics/analytics.page').then(m => m.AnalyticsPage) },
       { path: 'emergency', loadComponent: () => import('./analytics/presentation/pages/analytics/analytics.page').then(m => m.AnalyticsPage) },
-      { path: 'notifications', loadComponent: () => import('./analytics/presentation/pages/analytics/analytics.page').then(m => m.AnalyticsPage) },
+      { path: 'notifications', loadComponent: () => import('./notifications/presentation/pages/notifications/notifications.page').then(m => m.NotificationsPage) },
       { path: 'payments', loadComponent: () => import('./analytics/presentation/pages/analytics/analytics.page').then(m => m.AnalyticsPage) },
       { path: 'reports', loadComponent: () => import('./analytics/presentation/pages/analytics/analytics.page').then(m => m.AnalyticsPage) },
       { path: 'users', loadComponent: () => import('./analytics/presentation/pages/analytics/analytics.page').then(m => m.AnalyticsPage) },

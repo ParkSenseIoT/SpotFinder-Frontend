@@ -1,0 +1,168 @@
+$bg-dark: #08100f;
+$panel-bg: #151d1d;
+$border: #2e3636;
+$cyan: #01f2f2;
+$text-main: #dbe4e3;
+$text-muted: #8b9d9c;
+
+.feed-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: $panel-bg;
+  border-radius: 8px;
+  border: 1px solid $border;
+  overflow: hidden;
+}
+
+.feed-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid $border;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .toggle-group {
+    display: flex;
+    gap: 4px;
+    background: $bg-dark;
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid $border;
+    flex-wrap: wrap;
+
+    button {
+      background: transparent;
+      color: $text-muted;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 2px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: 0.2s;
+
+      &:hover {
+        color: $text-main;
+      }
+
+      &.active {
+        background: $cyan;
+        color: #000;
+      }
+
+      .badge {
+        background: rgba(0, 0, 0, 0.25);
+        color: inherit;
+        border-radius: 10px;
+        padding: 2px 6px;
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      &.active .badge {
+        background: rgba(0, 0, 0, 0.2);
+        color: #000;
+      }
+    }
+  }
+}
+
+.feed-list {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($cyan, 0.25);
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba($cyan, 0.45);
+  }
+}
+
+.empty-state,
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: $text-muted;
+  text-align: center;
+
+  .icon-empty {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  h4 {
+    margin: 0 0 8px 0;
+    color: $text-main;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba($cyan, 0.3);
+  border-radius: 50%;
+  border-top-color: $cyan;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .feed-header {
+    flex-direction: column;
+    align-items: stretch;
+
+    .toggle-group {
+      width: 100%;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+
+      button {
+        flex: 1;
+        justify-content: center;
+      }
+    }
+  }
+}
