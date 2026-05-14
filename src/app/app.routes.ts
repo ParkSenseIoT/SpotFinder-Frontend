@@ -31,7 +31,8 @@ export const routes: Routes = [
 
 
       { path: 'payments', loadComponent: () => import('./payments/presentation/pages/payments/payments.page').then(m => m.PaymentsPage) },
-
+       { path: 'notifications', loadComponent: () => import('./notifications/presentation/pages/notifications/notifications.page').then(m => m.NotificationsPage) },
+      
       { path: 'reports', loadComponent: () => import('./analytics/presentation/pages/analytics/analytics.page').then(m => m.AnalyticsPage) },
       { path: 'users', loadComponent: () => import('./analytics/presentation/pages/analytics/analytics.page').then(m => m.AnalyticsPage) },
       { path: 'settings', loadComponent: () => import('./analytics/presentation/pages/analytics/analytics.page').then(m => m.AnalyticsPage) }
