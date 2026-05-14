@@ -1,0 +1,175 @@
+$bg-dark: #08100f;
+$panel-bg: #151d1d;
+$border: #2e3636;
+$cyan: #01f2f2;
+$text-main: #dbe4e3;
+$text-muted: #8b9d9c;
+$red: #ffb4ab;
+$success: #7ee787;
+$warning: #ffb347;
+$font-mono: 'JetBrains Mono', monospace;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.activity-panel {
+  background-color: transparent;
+  border-radius: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+
+  .panel-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid $border;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+
+    h3 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-family: $font-mono;
+      color: $text-muted;
+    }
+
+    .icon.pulse {
+      color: $cyan;
+      animation: pulse 2s infinite;
+    }
+  }
+
+  .activity-content {
+    padding: 16px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba($cyan, 0.2);
+      border-radius: 10px;
+    }
+  }
+}
+
+.empty-state {
+  color: $text-muted;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 24px;
+}
+
+.timeline {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 7px;
+    width: 2px;
+    background-color: rgba($text-main, 0.12);
+  }
+}
+
+.timeline-item {
+  position: relative;
+  padding-left: 24px;
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: $bg-dark;
+    border: 2px solid $text-muted;
+    z-index: 1;
+  }
+
+  &.success .timeline-marker {
+    border-color: $success;
+  }
+
+  &.warning .timeline-marker {
+    border-color: $warning;
+  }
+
+  &.error .timeline-marker {
+    border-color: $red;
+  }
+
+  &.info .timeline-marker {
+    border-color: $cyan;
+  }
+
+  .timeline-content {
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2px;
+      gap: 8px;
+
+      .title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: $text-main;
+      }
+
+      .time {
+        font-family: $font-mono;
+        font-size: 0.72rem;
+        color: $text-muted;
+        white-space: nowrap;
+      }
+    }
+
+    .message {
+      margin: 0;
+      font-size: 0.85rem;
+      color: $text-muted;
+      line-height: 1.4;
+    }
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}

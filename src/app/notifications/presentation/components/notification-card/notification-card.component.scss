@@ -1,0 +1,189 @@
+$panel-bg: #151d1d;
+$border: #2e3636;
+$cyan: #01f2f2;
+$text-main: #dbe4e3;
+$text-muted: #8b9d9c;
+$red: #ffb4ab;
+$success: #7ee787;
+$warning: #ffb347;
+$font-mono: 'JetBrains Mono', monospace;
+
+.notification-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background-color: $panel-bg;
+  border-radius: 6px;
+  border: 1px solid $border;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 12px;
+
+  &:hover {
+    border-color: rgba($cyan, 0.35);
+    box-shadow: 0 0 12px rgba($cyan, 0.08);
+  }
+
+  &.unread,
+  &.delivered,
+  &.pending,
+  &.sent {
+    border-left: 4px solid $cyan;
+  }
+
+  &.read {
+    opacity: 0.82;
+    border-left: 4px solid transparent;
+  }
+
+  &.failed {
+    border-left: 4px solid $red;
+    opacity: 0.95;
+  }
+
+  &.critical {
+    border-left-color: $red;
+
+    .card-icon {
+      color: $red;
+    }
+
+    &.unread,
+    &.delivered,
+    &.pending,
+    &.sent {
+      background-color: rgba($red, 0.06);
+    }
+  }
+
+  &.warning {
+    border-left-color: $warning;
+
+    .card-icon {
+      color: $warning;
+    }
+
+    &.unread,
+    &.delivered,
+    &.pending,
+    &.sent {
+      background-color: rgba($warning, 0.06);
+    }
+  }
+
+  &.success {
+    border-left-color: $success;
+
+    .card-icon {
+      color: $success;
+    }
+  }
+
+  &.info {
+    border-left-color: rgba($cyan, 0.7);
+
+    .card-icon {
+      color: $cyan;
+    }
+  }
+
+  .card-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba($text-main, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+  }
+
+  .card-content {
+    flex: 1;
+    min-width: 0;
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+      gap: 8px;
+
+      .title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .time {
+        font-size: 0.8rem;
+        color: $text-muted;
+        white-space: nowrap;
+        font-family: $font-mono;
+      }
+    }
+
+    .body {
+      margin: 0 0 12px 0;
+      font-size: 0.9rem;
+      color: $text-muted;
+      line-height: 1.4;
+    }
+
+    .meta-data {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+
+      .badge {
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background-color: rgba($cyan, 0.08);
+        color: $cyan;
+        border: 1px solid rgba($cyan, 0.25);
+        font-family: $font-mono;
+      }
+    }
+
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+
+      .btn-text {
+        background: none;
+        border: none;
+        color: $cyan;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        transition: color 0.2s ease, text-shadow 0.2s ease;
+
+        &:hover {
+          color: #5efcfc;
+          text-shadow: 0 0 8px rgba($cyan, 0.4);
+        }
+      }
+
+      .btn-icon {
+        background: none;
+        border: none;
+        color: $text-muted;
+        cursor: pointer;
+        padding: 4px;
+        margin-left: auto;
+        border-radius: 50%;
+
+        &:hover {
+          color: $text-main;
+          background-color: rgba($text-main, 0.08);
+        }
+      }
+    }
+  }
+}
