@@ -1,11 +1,11 @@
+// src/app/iam/application/store/auth.store.ts
 import { inject } from '@angular/core';
 import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { pipe, switchMap, tap } from 'rxjs';
-import { tapResponse } from '@ngrx/operators';
+import { pipe, tap, of } from 'rxjs';
 import { Router } from '@angular/router';
 import { TokenStorageService } from '../../infrastructure/storage/token-storage.service';
-import { AuthHttpService, LoginRequest, AuthResponse } from '../../infrastructure/http/auth-http.service';
+import { LoginRequest } from '../../infrastructure/http/auth-http.service';
 
 interface AuthState {
   user: any | null;
@@ -24,42 +24,43 @@ const initialState: AuthState = {
 export const AuthStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withMethods(
-    (
-      store,
-      authService = inject(AuthHttpService),
-      tokenStorage = inject(TokenStorageService),
-      router = inject(Router)
-    ) => ({
+  withMethods((store, tokenStorage = inject(TokenStorageService), router = inject(Router)) => ({
+    login: rxMethod<LoginRequest>(
+      pipe(
+        tap(() => patchState(store, { isLoading: true, error: null })),
+        tap((credentials) => {
+          // --- MOCK: acepta cualquier email/contraseña ---
+          // Si quieres validar solo una cuenta fija, descomenta las líneas de abajo
+          // const validEmail = 'admin@mall.com';
+          // const validPassword = '12345678';
+          // if (credentials.email !== validEmail || credentials.password !== validPassword) {
+          //   patchState(store, { error: 'Credenciales inválidas', isLoading: false });
+          //   return;
+          // }
 
-      // Cambiamos 'signIn' por 'login' y le pasamos el tipo LoginRequest
-      login: rxMethod<LoginRequest>(
-        pipe(
-          tap(() => patchState(store, { isLoading: true, error: null })),
-          switchMap((credentials) =>
-            authService.login(credentials).pipe(
-              // Tipamos la respuesta como AuthResponse para que deje de ser 'unknown'
-              tapResponse({
-                next: (response: AuthResponse) => {
-                  tokenStorage.saveSession(response.token, response.user);
-                  patchState(store, { user: response.user, isAuthenticated: true, isLoading: false });
-                  router.navigate(['/dashboard']);
-                },
-                error: (err) => {
-                  console.error(err);
-                  patchState(store, { error: 'Invalid credentials or server offline', isLoading: false });
-                },
-              })
-            )
-          )
-        )
-      ),
-
-      logout() {
-        tokenStorage.clearSession();
-        patchState(store, initialState);
-        router.navigate(['/auth/login']);
-      }
-    })
-  )
+          // Simulamos un usuario
+          const mockUser = {
+            id: 1,
+            email: credentials.email,
+            firstName: 'Mock',
+            lastName: 'User',
+            isVerified: true,
+            active: true,
+            roles: ['ADMIN'],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          const mockToken = 'mock-jwt-token-' + Date.now();
+          tokenStorage.saveSession(mockToken, mockUser);
+          patchState(store, { user: mockUser, isAuthenticated: true, isLoading: false });
+          router.navigate(['/dashboard']);
+        })
+      )
+    ),
+    logout() {
+      tokenStorage.clearSession();
+      patchState(store, initialState);
+      router.navigate(['/auth/login']);
+    }
+  }))
 );
