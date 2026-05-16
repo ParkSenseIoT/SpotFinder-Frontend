@@ -11,8 +11,10 @@ import {
   isUnreadStatus,
   severityFromNotificationType,
 } from '../../domain/utils/notification-display.utils';
+import { TokenStorageService } from '../../../iam/infrastructure/storage/token-storage.service';
+import { environment } from '../../../../environments/environment';
 
-const MOCK_USER_ID = 'user-1';
+const FALLBACK_USER_ID = 1;
 
 export type NotificationInboxFilter = 'ALL' | 'UNREAD' | 'EMERGENCY' | 'PAYMENTS' | 'ACTIVITY';
 
@@ -22,6 +24,7 @@ interface NotificationsState {
   systemHealth: SystemHealthMetric[];
   preferences: NotificationPreference[];
   filter: NotificationInboxFilter;
+  userId: number;
   isLoading: boolean;
   isRealtimeActive: boolean;
 }
@@ -32,6 +35,7 @@ const initialState: NotificationsState = {
   systemHealth: [],
   preferences: [],
   filter: 'ALL',
+  userId: FALLBACK_USER_ID,
   isLoading: false,
   isRealtimeActive: false,
 };
@@ -83,12 +87,19 @@ export const NotificationsStore = signalStore(
       }
     }),
   })),
-  withMethods((store, service = inject(NotificationsHttpService)) => ({
+  withMethods((store, service = inject(NotificationsHttpService), tokenStorage = inject(TokenStorageService)) => ({
     setFilter(filter: NotificationInboxFilter) {
       patchState(store, { filter });
     },
 
-    loadAll: rxMethod<string>(
+    resolveUserId() {
+      const user = tokenStorage.getUser();
+      const id = Number(user?.id);
+      const userId = Number.isFinite(id) && id > 0 ? id : FALLBACK_USER_ID;
+      patchState(store, { userId });
+    },
+
+    loadAll: rxMethod<number>(
       pipe(
         tap(() => patchState(store, { isLoading: true })),
         switchMap((userId) =>
@@ -128,7 +139,7 @@ export const NotificationsStore = signalStore(
       )
     ),
 
-    loadPreferences: rxMethod<string>(
+    loadPreferences: rxMethod<number>(
       pipe(
         switchMap((userId) =>
           service.getPreferences(userId).pipe(
@@ -147,7 +158,7 @@ export const NotificationsStore = signalStore(
           const next = store.preferences().map((p) =>
             p.notificationType === type ? { ...p, enabled } : p
           );
-          return { userId: MOCK_USER_ID, preferences: next };
+          return { userId: store.userId(), preferences: next };
         }),
         switchMap(({ userId, preferences }) =>
           service.updatePreferences(userId, preferences).pipe(
@@ -165,9 +176,13 @@ export const NotificationsStore = signalStore(
         switchMap((id) =>
           service.markAsRead(id).pipe(
             tapResponse({
-              next: (updated) => {
+              next: () => {
                 patchState(store, (state) => ({
-                  notifications: state.notifications.map((n) => (n.id === id ? updated : n)),
+                  notifications: state.notifications.map((n) =>
+                    n.id === id
+                      ? { ...n, status: NotificationStatus.READ, readAt: new Date().toISOString() }
+                      : n
+                  ),
                 }));
               },
               error: () => undefined,
@@ -182,9 +197,13 @@ export const NotificationsStore = signalStore(
         switchMap((id) =>
           service.acknowledge(id).pipe(
             tapResponse({
-              next: (updated) => {
+              next: () => {
                 patchState(store, (state) => ({
-                  notifications: state.notifications.map((n) => (n.id === id ? updated : n)),
+                  notifications: state.notifications.map((n) =>
+                    n.id === id
+                      ? { ...n, status: NotificationStatus.READ, readAt: new Date().toISOString() }
+                      : n
+                  ),
                 }));
               },
               error: () => undefined,
@@ -224,13 +243,16 @@ export const NotificationsStore = signalStore(
       }));
     },
 
-    /** Simulated push + ops stream; replace with WebSocket consumer later. */
+    /**
+     * Synthetic stream for the operational panel until WebSocket / SSE is wired up.
+     * Disabled in production builds via environment.enableRealtimeMock.
+     */
     startRealtimeSimulation: rxMethod<void>(
       pipe(
         tap(() => patchState(store, { isRealtimeActive: true })),
         switchMap(() =>
           interval(8000).pipe(
-            filter(() => store.isRealtimeActive()),
+            filter(() => store.isRealtimeActive() && environment.enableRealtimeMock),
             tap(() => {
               const nonEmergency = SIMULATION_TYPES.filter(
                 (t) => t !== NotificationType.EMERGENCY_ALERT
@@ -246,7 +268,7 @@ export const NotificationsStore = signalStore(
                 const gate = Math.floor(Math.random() * 5) + 1;
                 const newNotif: Notification = {
                   id: `notif-live-${ts}`,
-                  userId: MOCK_USER_ID,
+                  userId: String(store.userId()),
                   type: safeType,
                   title,
                   body:
@@ -315,11 +337,15 @@ export const NotificationsStore = signalStore(
   })),
   withHooks({
     onInit(store) {
-      store.loadAll(MOCK_USER_ID);
+      store.resolveUserId();
+      const userId = store.userId();
+      store.loadAll(userId);
       store.loadSystemHealth();
       store.loadActivityLogs();
-      store.loadPreferences(MOCK_USER_ID);
-      store.startRealtimeSimulation();
+      store.loadPreferences(userId);
+      if (environment.enableRealtimeMock) {
+        store.startRealtimeSimulation();
+      }
     },
     onDestroy(store) {
       store.stopRealtimeSimulation();

@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { computed, inject } from '@angular/core';
 import { signalStore, withState, withMethods, patchState, withComputed, withHooks } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { catchError, EMPTY, filter, forkJoin, interval, pipe, startWith, switchMap, tap, timer } from 'rxjs';
+import { catchError, EMPTY, filter, forkJoin, interval, pipe, startWith, switchMap, tap } from 'rxjs';
 import { tapResponse } from '@ngrx/operators';
 import { PaymentsHttpService } from '../../infrastructure/http/payments-http.service';
 import { GenerateReportRequest, Payment, PaymentReport, RevenueAnalytics } from '../../domain/models/payment.models';
@@ -183,10 +183,8 @@ export const PaymentsStore = signalStore(
                 reportsLoading: false,
               }));
             }),
-            switchMap((created) =>
-              timer(2600).pipe(
-                tap(() => http.simulateReportReady(created.id)),
-                switchMap(() => http.listReports()),
+            switchMap(() =>
+              http.listReports().pipe(
                 tap((reports) => patchState(store, { reports }))
               )
             ),
@@ -236,7 +234,6 @@ export const PaymentsStore = signalStore(
           interval(22000).pipe(
             startWith(0),
             filter(() => store.autoRefreshActive()),
-            tap(() => http.applyDemoPaymentTick()),
             switchMap(() =>
               forkJoin({
                 revenue: http.getRevenueAnalytics(),

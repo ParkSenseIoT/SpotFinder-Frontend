@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable, map } from 'rxjs';
 import {
   GenerateReportRequest,
   Payment,
@@ -16,281 +16,181 @@ import {
   PaymentStatus,
 } from '../../domain/enums/payment.enums';
 import { environment } from '../../../../environments/environment';
+import { TokenStorageService } from '../../../iam/infrastructure/storage/token-storage.service';
 
-/**
- * Payments & revenue monitoring API seam.
- * Replace `of(...).pipe(delay())` with `HttpClient` calls when wiring the real backend.
- */
+interface PaymentResource {
+  id: number;
+  sessionId: number;
+  amount: number | string;
+  currency: string;
+  paymentMethod: string;
+  status: string;
+  transactionId: string | null;
+  receiptUrl: string | null;
+  paidAt: string | null;
+  duration: string | null;
+  hoursCharged: number;
+}
+
+interface RevenueMetricsResource {
+  totalRevenue: number | string;
+  averageTicket: number | string;
+  totalTransactions: number;
+  paymentsByMethod: Record<string, number | string>;
+  dataByDay: Record<string, number | string>;
+  currency: string;
+}
+
+interface ReportResource {
+  id: number;
+  reportType: string;
+  periodStart: string | null;
+  periodEnd: string | null;
+  generatedAt: string | null;
+  status: string | null;
+  fileUrl: string | null;
+  facilityId: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PaymentsHttpService {
+  private readonly http = inject(HttpClient);
+  private readonly tokenStorage = inject(TokenStorageService);
   private readonly baseUrl = `${environment.apiBaseUrl}${environment.apiPrefix}`;
-
-  private mockReports: PaymentReport[] = [
-    {
-      id: 'rpt-8841',
-      name: 'Revenue summary — Q1 operations',
-      format: PaymentReportFormat.PDF,
-      status: PaymentReportStatus.READY,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
-      downloadUrl: `${this.baseUrl}/payment-reports/rpt-8841/download`,
-      sizeBytes: 482_000,
-    },
-    {
-      id: 'rpt-8842',
-      name: 'Transaction ledger — last 30 days',
-      format: PaymentReportFormat.CSV,
-      status: PaymentReportStatus.READY,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 50).toISOString(),
-      downloadUrl: `${this.baseUrl}/payment-reports/rpt-8842/download`,
-      sizeBytes: 1_240_000,
-    },
-    {
-      id: 'rpt-8843',
-      name: 'Method mix — executive',
-      format: PaymentReportFormat.PDF,
-      status: PaymentReportStatus.GENERATING,
-      createdAt: new Date(Date.now() - 1000 * 60 * 3).toISOString(),
-    },
-    {
-      id: 'rpt-8839',
-      name: 'Failed payments audit',
-      format: PaymentReportFormat.CSV,
-      status: PaymentReportStatus.FAILED,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 120).toISOString(),
-    },
-    {
-      id: 'rpt-8838',
-      name: 'Compliance export — PCI scope',
-      format: PaymentReportFormat.PDF,
-      status: PaymentReportStatus.READY,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 200).toISOString(),
-      downloadUrl: `${this.baseUrl}/payment-reports/rpt-8838/download`,
-      sizeBytes: 320_000,
-    },
-  ];
-
-  private mockPayments: Payment[] = buildMockPayments();
 
   /** GET /api/v1/analytics/revenue */
   getRevenueAnalytics(): Observable<RevenueAnalytics> {
-    const analytics = computeRevenueFromPayments(this.mockPayments);
-    const jitter = Math.round((Math.random() - 0.5) * 80);
-    const next: RevenueAnalytics = {
-      ...analytics,
-      totalRevenue: Math.max(0, analytics.totalRevenue + jitter),
-      averageTicket:
-        analytics.totalTransactions > 0
-          ? Math.round((analytics.totalRevenue + jitter) / analytics.totalTransactions * 100) / 100
-          : 0,
-    };
-    return of(next).pipe(delay(420));
-  }
-
-  /** GET /api/v1/payments (admin / monitoring list; align path with backend) */
-  listPayments(): Observable<Payment[]> {
-    return of([...this.mockPayments]).pipe(delay(520));
-  }
-
-  /** GET /api/v1/payment-reports */
-  listReports(): Observable<PaymentReport[]> {
-    return of([...this.mockReports]).pipe(delay(360));
-  }
-
-  /** POST /api/v1/payment-reports/generate */
-  generateReport(req: GenerateReportRequest): Observable<PaymentReport> {
-    const id = `rpt-${Date.now().toString(36).toUpperCase()}`;
-    const report: PaymentReport = {
-      id,
-      name: req.name,
-      format: req.format,
-      status: PaymentReportStatus.GENERATING,
-      createdAt: new Date().toISOString(),
-    };
-    this.mockReports = [report, ...this.mockReports];
-    return of(report).pipe(delay(480));
-  }
-
-  /** GET /api/v1/payment-reports/{id}/download — mock returns a Blob */
-  downloadReport(reportId: string): Observable<Blob> {
-    const r = this.mockReports.find((x) => x.id === reportId);
-    if (!r) return throwError(() => new Error('Report not found'));
-    if (r.status !== PaymentReportStatus.READY || !r.downloadUrl) {
-      return throwError(() => new Error('Report not available for download'));
-    }
-    const text =
-      `SpotFinder — ${r.name}\n` +
-      `Report ID: ${r.id}\n` +
-      `Generated (mock): ${new Date().toISOString()}\n`;
-    const blob = new Blob([text], { type: r.format === PaymentReportFormat.CSV ? 'text/csv' : 'application/pdf' });
-    return of(blob).pipe(delay(280));
+    return this.http
+      .get<RevenueMetricsResource>(`${this.baseUrl}/analytics/revenue`)
+      .pipe(map((res) => toRevenueAnalytics(res)));
   }
 
   /**
-   * Simulated finalize for GENERATING reports (demo only).
-   * Real backend would push status via polling or WebSocket.
+   * GET /api/v1/payments/history?userId={id}
+   *
+   * NOTE: backend only exposes per-user history. There's no admin-wide listing
+   * endpoint yet — when one is added (e.g. `GET /api/v1/payments`), swap this.
    */
-  simulateReportReady(reportId: string): void {
-    this.mockReports = this.mockReports.map((r) =>
-      r.id === reportId
-        ? {
-            ...r,
-            status: PaymentReportStatus.READY,
-            downloadUrl: `${this.baseUrl}/payment-reports/${reportId}/download`,
-            sizeBytes: Math.floor(200_000 + Math.random() * 400_000),
-          }
-        : r
-    );
+  listPayments(): Observable<Payment[]> {
+    const userId = this.resolveUserId();
+    let params = new HttpParams();
+    if (userId !== null) params = params.set('userId', userId.toString());
+    return this.http
+      .get<PaymentResource[]>(`${this.baseUrl}/payments/history`, { params })
+      .pipe(map((rows) => rows.map(toPayment)));
   }
 
-  /** Optional: nudge mock payments for live demo (called from store on poll). */
-  applyDemoPaymentTick(): void {
-    if (Math.random() > 0.65) return;
-    const pendingIdx = this.mockPayments.findIndex((p) => p.status === PaymentStatus.PENDING);
-    if (pendingIdx === -1) return;
-    const p = this.mockPayments[pendingIdx]!;
-    const settled: Payment = {
-      ...p,
-      status: Math.random() > 0.12 ? PaymentStatus.COMPLETED : PaymentStatus.FAILED,
-      paidAt: new Date().toISOString(),
-      transactionId:
-        p.status === PaymentStatus.PENDING
-          ? `TXN-SF-${Date.now().toString(36).toUpperCase()}`
-          : p.transactionId,
-      receiptUrl:
-        Math.random() > 0.2
-          ? `https://receipts.spotfinder.mock/${p.id}.pdf`
-          : null,
+  /** GET /api/v1/reports */
+  listReports(): Observable<PaymentReport[]> {
+    return this.http
+      .get<ReportResource[]>(`${this.baseUrl}/reports`)
+      .pipe(map((rows) => rows.map((r) => toPaymentReport(r, this.baseUrl))));
+  }
+
+  /** POST /api/v1/reports */
+  generateReport(req: GenerateReportRequest): Observable<PaymentReport> {
+    const user = this.tokenStorage.getUser();
+    const payload = {
+      reportType: 'REVENUE',
+      startDate: req.dateFrom ?? null,
+      endDate: req.dateTo ?? null,
+      generatedBy: user?.id ?? null,
+      facilityId: null,
     };
-    this.mockPayments = this.mockPayments.map((x, i) => (i === pendingIdx ? settled : x));
+    return this.http
+      .post<ReportResource>(`${this.baseUrl}/reports`, payload)
+      .pipe(map((r) => toPaymentReport({ ...r, reportType: req.name }, this.baseUrl)));
+  }
+
+  /** GET /api/v1/reports/{id}/download */
+  downloadReport(reportId: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/reports/${reportId}/download`, {
+      responseType: 'blob',
+    });
+  }
+
+  private resolveUserId(): number | null {
+    const user = this.tokenStorage.getUser();
+    const id = Number(user?.id);
+    return Number.isFinite(id) && id > 0 ? id : null;
   }
 }
 
-function buildMockPayments(): Payment[] {
-  const currency = 'PEN';
-  const now = Date.now();
-  const iso = (offsetH: number) => new Date(now - offsetH * 3600_000).toISOString();
-
-  const rows: Payment[] = [
-    pay('pay-001', 'sess-A91', 18.5, currency, PaymentMethod.YAPE, PaymentStatus.COMPLETED, 'TXN-SF-8K2M9Q1', iso(2), '1h 15m', 1.25, 'usr-104'),
-    pay('pay-002', 'sess-A88', 42.0, currency, PaymentMethod.CREDIT_CARD, PaymentStatus.COMPLETED, 'TXN-SF-7J3N2P0', iso(5), '3h 00m', 3.0, 'usr-221'),
-    pay('pay-003', 'sess-B02', 12.0, currency, PaymentMethod.DEBIT_CARD, PaymentStatus.PENDING, 'TXN-SF-PENDING-01', null, null, null, 'usr-332'),
-    pay('pay-004', 'sess-B07', 8.0, currency, PaymentMethod.YAPE, PaymentStatus.FAILED, 'TXN-SF-FAIL-8821', null, null, null, 'usr-104'),
-    pay('pay-005', 'sess-C14', 55.75, currency, PaymentMethod.CREDIT_CARD, PaymentStatus.COMPLETED, 'TXN-SF-9L4R8T2', iso(8), '4h 30m', 4.5, 'usr-410'),
-    pay('pay-006', 'sess-C19', 6.0, currency, PaymentMethod.YAPE, PaymentStatus.COMPLETED, 'TXN-SF-6H1W5Y9', iso(12), '0h 45m', 0.75, 'usr-512'),
-    pay('pay-007', 'sess-D21', 24.0, currency, PaymentMethod.DEBIT_CARD, PaymentStatus.COMPLETED, 'TXN-SF-5G9X3V7', iso(18), '2h 00m', 2.0, 'usr-221'),
-    pay('pay-008', 'sess-D22', 24.0, currency, PaymentMethod.CREDIT_CARD, PaymentStatus.PENDING, 'TXN-SF-PENDING-02', null, null, null, 'usr-633'),
-    pay('pay-009', 'sess-E30', 36.25, currency, PaymentMethod.YAPE, PaymentStatus.COMPLETED, 'TXN-SF-4F8U2S6', iso(30), '2h 45m', 2.75, 'usr-104'),
-    pay('pay-010', 'sess-E31', 15.0, currency, PaymentMethod.DEBIT_CARD, PaymentStatus.FAILED, 'TXN-SF-FAIL-7732', null, null, null, 'usr-701'),
-    pay('pay-011', 'sess-F40', 9.5, currency, PaymentMethod.YAPE, PaymentStatus.COMPLETED, 'TXN-SF-3E7T1R5', iso(40), '1h 00m', 1.0, 'usr-512'),
-    pay('pay-012', 'sess-F41', 48.0, currency, PaymentMethod.CREDIT_CARD, PaymentStatus.COMPLETED, 'TXN-SF-2D6S0Q4', iso(52), '5h 00m', 5.0, 'usr-221'),
-    pay('pay-013', 'sess-G55', 11.25, currency, PaymentMethod.DEBIT_CARD, PaymentStatus.COMPLETED, 'TXN-SF-1C5R9P3', iso(70), '0h 50m', 0.83, 'usr-332'),
-    pay('pay-014', 'sess-G56', 28.0, currency, PaymentMethod.YAPE, PaymentStatus.COMPLETED, 'TXN-SF-0B4Q8O2', iso(90), '2h 20m', 2.33, 'usr-410'),
-    pay('pay-015', 'sess-H60', 33.5, currency, PaymentMethod.CREDIT_CARD, PaymentStatus.COMPLETED, 'TXN-SF-ZA3N7M1', iso(110), '2h 50m', 2.83, 'usr-633'),
-    pay('pay-016', 'sess-H61', 7.5, currency, PaymentMethod.YAPE, PaymentStatus.PENDING, 'TXN-SF-PENDING-03', null, null, null, 'usr-701'),
-    pay('pay-017', 'sess-J70', 19.0, currency, PaymentMethod.DEBIT_CARD, PaymentStatus.COMPLETED, 'TXN-SF-Y92L6K0', iso(140), '1h 30m', 1.5, 'usr-104'),
-    pay('pay-018', 'sess-J71', 62.0, currency, PaymentMethod.CREDIT_CARD, PaymentStatus.COMPLETED, 'TXN-SF-X81K5J9', iso(180), '6h 10m', 6.17, 'usr-221'),
-  ];
-
-  return rows;
-}
-
-function pay(
-  id: string,
-  sessionId: string,
-  amount: number,
-  currency: string,
-  method: PaymentMethod,
-  status: PaymentStatus,
-  transactionId: string,
-  paidAt: string | null,
-  duration: string | null,
-  hoursCharged: number | null,
-  userId: string
-): Payment {
+function toPayment(resource: PaymentResource): Payment {
   return {
-    id,
-    sessionId,
-    amount,
-    currency,
-    paymentMethod: method,
-    status,
-    transactionId,
-    receiptUrl:
-      status === PaymentStatus.COMPLETED
-        ? `https://receipts.spotfinder.mock/${id}.pdf`
-        : null,
-    paidAt,
-    duration,
-    hoursCharged,
-    userId,
+    id: String(resource.id),
+    sessionId: String(resource.sessionId),
+    amount: numberFromAny(resource.amount),
+    currency: resource.currency ?? 'PEN',
+    paymentMethod: parseEnum<PaymentMethod>(resource.paymentMethod, PaymentMethod.YAPE),
+    status: parseEnum<PaymentStatus>(resource.status, PaymentStatus.PENDING),
+    transactionId: resource.transactionId ?? '',
+    receiptUrl: resource.receiptUrl,
+    paidAt: resource.paidAt,
+    duration: resource.duration,
+    hoursCharged: resource.hoursCharged ?? null,
+    userId: '',
   };
 }
 
-function computeRevenueFromPayments(payments: Payment[]): RevenueAnalytics {
-  const completed = payments.filter((p) => p.status === PaymentStatus.COMPLETED);
-  const totalRevenue = completed.reduce((s, p) => s + p.amount, 0);
-  const totalTransactions = completed.length;
-  const averageTicket =
-    totalTransactions > 0 ? Math.round((totalRevenue / totalTransactions) * 100) / 100 : 0;
+function toRevenueAnalytics(res: RevenueMetricsResource): RevenueAnalytics {
+  const paymentsByMethod: RevenueByMethodEntry[] = Object.entries(res.paymentsByMethod ?? {})
+    .map(([method, amount]) => ({
+      method: parseEnum<PaymentMethod>(method, PaymentMethod.YAPE),
+      amount: numberFromAny(amount),
+      count: 0,
+    }))
+    .filter((entry) => entry.amount > 0);
 
-  const byMethodMap = new Map<PaymentMethod, { amount: number; count: number }>();
-  for (const p of completed) {
-    const cur = byMethodMap.get(p.paymentMethod) ?? { amount: 0, count: 0 };
-    cur.amount += p.amount;
-    cur.count += 1;
-    byMethodMap.set(p.paymentMethod, cur);
-  }
-  const paymentsByMethod: RevenueByMethodEntry[] = (
-    [PaymentMethod.YAPE, PaymentMethod.CREDIT_CARD, PaymentMethod.DEBIT_CARD] as PaymentMethod[]
-  )
-    .map((method) => {
-      const v = byMethodMap.get(method);
-      return { method, amount: v?.amount ?? 0, count: v?.count ?? 0 };
-    })
-    .filter((x) => x.count > 0);
-
-  const dayMap = new Map<string, { revenue: number; transactionCount: number }>();
-  for (const p of completed) {
-    if (!p.paidAt) continue;
-    const day = p.paidAt.slice(0, 10);
-    const cur = dayMap.get(day) ?? { revenue: 0, transactionCount: 0 };
-    cur.revenue += p.amount;
-    cur.transactionCount += 1;
-    dayMap.set(day, cur);
-  }
-  const dataByDay: RevenueByDayEntry[] = [...dayMap.entries()]
-    .map(([date, v]) => ({ date, revenue: v.revenue, transactionCount: v.transactionCount }))
+  const dataByDay: RevenueByDayEntry[] = Object.entries(res.dataByDay ?? {})
+    .map(([date, revenue]) => ({
+      date,
+      revenue: numberFromAny(revenue),
+    }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  // Ensure chart-friendly series: fill last 21 calendar days from completed revenue
-  const filled = fillLastDays(dataByDay, 21);
-
   return {
-    totalRevenue,
-    averageTicket,
-    totalTransactions,
+    totalRevenue: numberFromAny(res.totalRevenue),
+    averageTicket: numberFromAny(res.averageTicket),
+    totalTransactions: res.totalTransactions ?? 0,
     paymentsByMethod,
-    dataByDay: filled,
-    currency: completed[0]?.currency ?? 'PEN',
+    dataByDay,
+    currency: res.currency ?? 'PEN',
   };
 }
 
-function fillLastDays(existing: RevenueByDayEntry[], days: number): RevenueByDayEntry[] {
-  const map = new Map(existing.map((e) => [e.date, e]));
-  const out: RevenueByDayEntry[] = [];
-  const today = new Date();
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    const hit = map.get(key);
-    out.push(
-      hit ?? {
-        date: key,
-        revenue: 0,
-        transactionCount: 0,
-      }
-    );
+function toPaymentReport(resource: ReportResource, baseUrl: string): PaymentReport {
+  const status = mapReportStatus(resource.status, resource.fileUrl);
+  return {
+    id: String(resource.id),
+    name: resource.reportType ?? `Report ${resource.id}`,
+    format: PaymentReportFormat.PDF,
+    status,
+    createdAt: resource.generatedAt ?? new Date().toISOString(),
+    downloadUrl:
+      status === PaymentReportStatus.READY
+        ? `${baseUrl}/reports/${resource.id}/download`
+        : undefined,
+  };
+}
+
+function mapReportStatus(status: string | null, fileUrl: string | null): PaymentReportStatus {
+  const upper = status?.toUpperCase();
+  if (upper === 'FAILED') return PaymentReportStatus.FAILED;
+  if (upper === 'READY' || fileUrl) return PaymentReportStatus.READY;
+  return PaymentReportStatus.GENERATING;
+}
+
+function parseEnum<T extends string>(value: string | null | undefined, fallback: T): T {
+  if (!value) return fallback;
+  return value as T;
+}
+
+function numberFromAny(value: unknown): number {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
   }
-  return out;
+  return 0;
 }
