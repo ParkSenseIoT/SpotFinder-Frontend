@@ -15,15 +15,15 @@ import {
   PaymentReportStatus,
   PaymentStatus,
 } from '../../domain/enums/payment.enums';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Payments & revenue monitoring API seam.
- * Replace `of(...).pipe(delay())` with `HttpClient` calls to the base URL
- * (e.g. `http://localhost:8080`) when wiring the real backend.
+ * Replace `of(...).pipe(delay())` with `HttpClient` calls when wiring the real backend.
  */
 @Injectable({ providedIn: 'root' })
 export class PaymentsHttpService {
-  private readonly baseUrl = 'http://localhost:8080';
+  private readonly baseUrl = `${environment.apiBaseUrl}${environment.apiPrefix}`;
 
   private mockReports: PaymentReport[] = [
     {
@@ -32,7 +32,7 @@ export class PaymentsHttpService {
       format: PaymentReportFormat.PDF,
       status: PaymentReportStatus.READY,
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
-      downloadUrl: `${this.baseUrl}/api/v1/payment-reports/rpt-8841/download`,
+      downloadUrl: `${this.baseUrl}/payment-reports/rpt-8841/download`,
       sizeBytes: 482_000,
     },
     {
@@ -41,7 +41,7 @@ export class PaymentsHttpService {
       format: PaymentReportFormat.CSV,
       status: PaymentReportStatus.READY,
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 50).toISOString(),
-      downloadUrl: `${this.baseUrl}/api/v1/payment-reports/rpt-8842/download`,
+      downloadUrl: `${this.baseUrl}/payment-reports/rpt-8842/download`,
       sizeBytes: 1_240_000,
     },
     {
@@ -64,7 +64,7 @@ export class PaymentsHttpService {
       format: PaymentReportFormat.PDF,
       status: PaymentReportStatus.READY,
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 200).toISOString(),
-      downloadUrl: `${this.baseUrl}/api/v1/payment-reports/rpt-8838/download`,
+      downloadUrl: `${this.baseUrl}/payment-reports/rpt-8838/download`,
       sizeBytes: 320_000,
     },
   ];
@@ -135,7 +135,7 @@ export class PaymentsHttpService {
         ? {
             ...r,
             status: PaymentReportStatus.READY,
-            downloadUrl: `${this.baseUrl}/api/v1/payment-reports/${reportId}/download`,
+            downloadUrl: `${this.baseUrl}/payment-reports/${reportId}/download`,
             sizeBytes: Math.floor(200_000 + Math.random() * 400_000),
           }
         : r

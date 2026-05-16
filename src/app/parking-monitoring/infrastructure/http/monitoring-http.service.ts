@@ -2,11 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
 import { LiveParkingSlot } from '../../domain/models/monitoring.models';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class MonitoringHttpService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/parking-monitoring';
+  private readonly apiUrl = `${environment.apiBaseUrl}${environment.apiPrefix}/parking-slots`;
 
   // ⚠️ NOTA PARA TU BACKEND: Crea un endpoint equivalente a esto que haga un JOIN
   // entre ParkingSlot, ParkingSession (Activa) y Vehicle para obtener la placa y la hora.

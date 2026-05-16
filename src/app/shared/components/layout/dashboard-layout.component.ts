@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { TokenStorageService } from '../../../iam/infrastructure/storage/token-storage.service';
@@ -7,7 +7,7 @@ import { NotificationsStore } from '../../../notifications/application/store/not
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule], // RouterModule es vital para routerLink y router-outlet
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard-layout.component.html',
   styleUrls: ['./dashboard-layout.component.scss']
 })
@@ -16,17 +16,32 @@ export class DashboardLayoutComponent implements OnInit {
   private readonly router = inject(Router);
   readonly notificationsStore = inject(NotificationsStore);
 
-  // Puedes extraer datos del tokenStorage si quieres mostrar el nombre real del usuario
-  userName = 'Admin_User_01';
-  userRole = 'Global Ops';
+  private readonly user = this.tokenStorage.getUser();
 
-  ngOnInit() {
-    // We only need to start the store if it's not already running. 
-    // The store's withHooks onInit will start it.
+  readonly userName = this.buildUserName();
+  readonly userRole = this.buildUserRole();
+
+  ngOnInit(): void {
+    // NotificationsStore self-initializes through withHooks#onInit.
   }
 
-  logout() {
+  logout(): void {
     this.tokenStorage.clearSession();
     this.router.navigate(['/auth/login']);
+  }
+
+  private buildUserName(): string {
+    if (!this.user) return 'Operator';
+    const first = (this.user.firstName ?? '').trim();
+    const last = (this.user.lastName ?? '').trim();
+    const full = `${first} ${last}`.trim();
+    return full || (this.user.email ?? 'Operator');
+  }
+
+  private buildUserRole(): string {
+    const roles: string[] = this.user?.roles ?? [];
+    if (roles.includes('ADMIN') || roles.includes('ROLE_ADMIN')) return 'Administrator';
+    if (roles.includes('DRIVER') || roles.includes('ROLE_DRIVER')) return 'Driver';
+    return roles[0] ?? 'Operator';
   }
 }
