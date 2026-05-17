@@ -1,0 +1,229 @@
+<div class="settings-page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Settings</h2>
+      <p class="page-subtitle">
+        Manage your profile, password, vehicles and notification preferences.
+      </p>
+    </div>
+  </header>
+
+  @if (store.error()) {
+    <div class="banner banner--warning">
+      <span>⚠ {{ store.error() }}</span>
+      <button type="button" class="btn-link" (click)="store.clearMessages()">Dismiss</button>
+    </div>
+  }
+
+  <nav class="tabs">
+    <button type="button" [class.active]="activeTab() === 'profile'" (click)="setTab('profile')">
+      Profile
+    </button>
+    <button type="button" [class.active]="activeTab() === 'password'" (click)="setTab('password')">
+      Password
+    </button>
+    <button type="button" [class.active]="activeTab() === 'vehicles'" (click)="setTab('vehicles')">
+      Vehicles
+    </button>
+    <button type="button" [class.active]="activeTab() === 'notifications'" (click)="setTab('notifications')">
+      Notifications
+    </button>
+  </nav>
+
+  @if (activeTab() === 'profile') {
+    <section class="panel">
+      <div class="panel-header">
+        <h3>Personal information</h3>
+        <span class="legend mono">PUT /users/&#123;id&#125;</span>
+      </div>
+      <div class="panel-body">
+        @if (store.profile(); as profile) {
+          <p class="profile-meta mono">
+            {{ profile.email }} · roles: {{ profile.roles.join(', ') || '—' }}
+          </p>
+          <form class="form-grid" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+            <label class="field">
+              <span class="label">First name</span>
+              <input type="text" formControlName="firstName" />
+            </label>
+            <label class="field">
+              <span class="label">Last name</span>
+              <input type="text" formControlName="lastName" />
+            </label>
+            <div class="actions">
+              <button type="submit" class="btn-primary" [disabled]="store.isSavingProfile()">
+                {{ store.isSavingProfile() ? 'Saving…' : 'Save changes' }}
+              </button>
+            </div>
+          </form>
+
+          @if (store.profileMessage()) {
+            <p class="status-text mono success">{{ store.profileMessage() }}</p>
+          }
+        } @else if (store.isLoadingProfile()) {
+          <p class="empty mono">Loading profile…</p>
+        }
+      </div>
+    </section>
+  }
+
+  @if (activeTab() === 'password') {
+    <section class="panel">
+      <div class="panel-header">
+        <h3>Change password</h3>
+        <span class="legend mono">POST /users/&#123;id&#125;/change-password</span>
+      </div>
+      <div class="panel-body">
+        <form class="form-grid" [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+          <label class="field">
+            <span class="label">Current password</span>
+            <input type="password" formControlName="currentPassword" autocomplete="current-password" />
+          </label>
+          <label class="field">
+            <span class="label">New password</span>
+            <input type="password" formControlName="newPassword" autocomplete="new-password" />
+            <small class="hint">Minimum 8 characters.</small>
+          </label>
+          <label class="field">
+            <span class="label">Confirm new password</span>
+            <input type="password" formControlName="confirmPassword" autocomplete="new-password" />
+            @if (
+              passwordForm.controls.confirmPassword.touched &&
+              !passwordsMatch()
+            ) {
+              <small class="error">Passwords don't match.</small>
+            }
+          </label>
+          <div class="actions">
+            <button type="submit" class="btn-primary" [disabled]="store.isChangingPassword()">
+              {{ store.isChangingPassword() ? 'Updating…' : 'Update password' }}
+            </button>
+          </div>
+        </form>
+
+        @if (store.passwordMessage()) {
+          <p class="status-text mono success">{{ store.passwordMessage() }}</p>
+        }
+      </div>
+    </section>
+  }
+
+  @if (activeTab() === 'vehicles') {
+    <section class="panel">
+      <div class="panel-header">
+        <h3>Add vehicle</h3>
+        <span class="legend mono">POST /users/&#123;id&#125;/vehicles</span>
+      </div>
+      <div class="panel-body">
+        <form class="form-grid form-grid--inline" [formGroup]="vehicleForm" (ngSubmit)="addVehicle()">
+          <label class="field">
+            <span class="label">Plate</span>
+            <input type="text" formControlName="plate" placeholder="ABC-1234" />
+          </label>
+          <label class="field">
+            <span class="label">Brand</span>
+            <input type="text" formControlName="brand" placeholder="Toyota" />
+          </label>
+          <label class="field">
+            <span class="label">Model</span>
+            <input type="text" formControlName="model" placeholder="Corolla" />
+          </label>
+          <label class="field">
+            <span class="label">Color</span>
+            <input type="text" formControlName="color" placeholder="Black" />
+          </label>
+          <div class="actions">
+            <button type="submit" class="btn-primary" [disabled]="store.isMutatingVehicle()">
+              {{ store.isMutatingVehicle() ? 'Saving…' : 'Add vehicle' }}
+            </button>
+          </div>
+        </form>
+
+        @if (store.vehicleMessage()) {
+          <p class="status-text mono success">{{ store.vehicleMessage() }}</p>
+        }
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h3>My vehicles</h3>
+        <span class="legend mono">{{ store.vehicles().length }} registered</span>
+      </div>
+      <div class="panel-body table-wrap">
+        @if (store.isLoadingVehicles()) {
+          <p class="empty mono">Loading vehicles…</p>
+        } @else if (store.vehicles().length === 0) {
+          <p class="empty mono">No vehicles registered yet.</p>
+        } @else {
+          <table>
+            <thead>
+              <tr>
+                <th>Plate</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>Color</th>
+                <th>Added</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (vehicle of store.vehicles(); track vehicle.id) {
+                <tr>
+                  <td class="bold">{{ vehicle.plate }}</td>
+                  <td>{{ vehicle.brand }}</td>
+                  <td>{{ vehicle.model }}</td>
+                  <td>{{ vehicle.color }}</td>
+                  <td class="mono">
+                    {{ vehicle.createdAt ? (vehicle.createdAt | date: 'short') : '—' }}
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn-link danger"
+                      [disabled]="store.isMutatingVehicle()"
+                      (click)="removeVehicle(vehicle.id)">
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </section>
+  }
+
+  @if (activeTab() === 'notifications') {
+    <section class="panel">
+      <div class="panel-header">
+        <h3>Notification preferences</h3>
+        <span class="legend mono">PUT /users/&#123;id&#125;/notification-preferences</span>
+      </div>
+      <div class="panel-body">
+        @if (notificationsStore.preferences().length === 0) {
+          <p class="empty mono">Loading preferences…</p>
+        } @else {
+          <div class="prefs-list">
+            @for (pref of notificationsStore.preferences(); track pref.notificationType) {
+              <label class="pref-row">
+                <div class="pref-text">
+                  <span class="pref-name">{{ pref.notificationType.replace('_', ' ') }}</span>
+                  @if (pref.locked) {
+                    <span class="locked-tag mono">REQUIRED</span>
+                  }
+                </div>
+                <input
+                  type="checkbox"
+                  [checked]="pref.enabled"
+                  [disabled]="pref.locked"
+                  (change)="togglePreference(pref.notificationType, $any($event.target).checked)" />
+              </label>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

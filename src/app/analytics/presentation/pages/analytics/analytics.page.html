@@ -1,128 +1,165 @@
-<div class="executive-dashboard" *ngIf="store.data() as analytics">
+@if (store.isLoading() && !store.data()) {
+  <div class="loading-state">
+    <p class="mono">LOADING ANALYTICS…</p>
+  </div>
+}
 
-  <section class="kpi-row">
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span>Live Occupancy</span>
-        <span class="icon cyan">((•))</span>
-      </div>
-      <div class="kpi-main">
-        <h2>{{ analytics.kpis.occupancy.value }}% <span class="trend">+{{ analytics.kpis.occupancy.trend }}%</span></h2>
-      </div>
-      <div class="kpi-footer">
-        <div class="progress-bar">
-          <div class="fill" [style.width.%]="analytics.kpis.occupancy.value"></div>
+@if (store.error() && !store.data()) {
+  <div class="error-state">
+    <p class="mono">⚠ {{ store.error() }}</p>
+  </div>
+}
+
+@if (store.data(); as analytics) {
+  <div class="executive-dashboard">
+
+    <section class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Live Occupancy</span>
+          <span class="icon cyan">((•))</span>
         </div>
-        <p>{{ analytics.kpis.occupancy.activeSpots | number }} / {{ analytics.kpis.occupancy.totalSpots | number }} Spots Active</p>
-      </div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span>Daily Revenue</span>
-        <span class="icon">💵</span>
-      </div>
-      <div class="kpi-main">
-        <h2>{{ analytics.kpis.revenue.value | currency }} <span class="trend">+{{ analytics.kpis.revenue.trend }}%</span></h2>
-      </div>
-      <div class="kpi-footer">
-        <p>Projected: {{ analytics.kpis.revenue.projected | currency:'USD':'symbol':'1.0-0' }} EOD</p>
-      </div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span>Avg Stay Duration</span>
-        <span class="icon">🕒</span>
-      </div>
-      <div class="kpi-main">
-        <h2>{{ analytics.kpis.stayDuration.hours }}h {{ analytics.kpis.stayDuration.minutes }}m <span class="trend negative">{{ analytics.kpis.stayDuration.trend }}%</span></h2>
-      </div>
-      <div class="kpi-footer">
-        <p>Peak: {{ analytics.kpis.stayDuration.peakTime }}</p>
-      </div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span>System Health</span>
-        <span class="icon">✔</span>
-      </div>
-      <div class="kpi-main">
-        <h2>{{ analytics.kpis.systemHealth.uptime }}%</h2>
-      </div>
-      <div class="kpi-footer">
-        <p><span class="dot online"></span> {{ analytics.kpis.systemHealth.status }}</p>
-        <p class="sub-text">Last Scan: {{ analytics.kpis.systemHealth.lastScan }}</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="middle-row">
-    <div class="panel chart-panel">
-      <div class="panel-header">
-        <h3>Occupancy Trends</h3>
-        <div class="toggle-group">
-          <button>Day</button>
-          <button class="active">Week</button>
-          <button>Month</button>
+        <div class="kpi-main">
+          <h2>{{ analytics.kpis.occupancy.value }}%
+            @if (analytics.kpis.occupancy.trend !== 0) {
+              <span class="trend" [class.negative]="analytics.kpis.occupancy.trend < 0">
+                {{ analytics.kpis.occupancy.trend > 0 ? '+' : '' }}{{ analytics.kpis.occupancy.trend }}%
+              </span>
+            }
+          </h2>
         </div>
-      </div>
-      <div class="chart-container">
-        <div echarts [options]="chartOptions" class="echarts-instance"></div>
-      </div>
-    </div>
-
-    <div class="panel density-panel">
-      <div class="panel-header">
-        <h3>Zone Density</h3>
-        <span class="icon">🗺</span>
-      </div>
-      <div class="density-content">
-        @for (zone of analytics.zones; track zone.name) {
-          <div class="zone-pill" [class.critical]="zone.status === 'critical'">
-            <span class="dot"></span> {{ zone.name }}: {{ zone.occupancyPercent }}%
+        <div class="kpi-footer">
+          <div class="progress-bar">
+            <div class="fill" [style.width.%]="analytics.kpis.occupancy.value"></div>
           </div>
+          <p>{{ analytics.kpis.occupancy.activeSpots | number }} / {{ analytics.kpis.occupancy.totalSpots | number }} Spots Active</p>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Daily Revenue</span>
+          <span class="icon">💵</span>
+        </div>
+        <div class="kpi-main">
+          <h2>{{ analytics.kpis.revenue.value | currency: analytics.currency }}
+            @if (analytics.kpis.revenue.trend !== 0) {
+              <span class="trend" [class.negative]="analytics.kpis.revenue.trend < 0">
+                {{ analytics.kpis.revenue.trend > 0 ? '+' : '' }}{{ analytics.kpis.revenue.trend }}%
+              </span>
+            }
+          </h2>
+        </div>
+        <div class="kpi-footer">
+          <p>Projected: {{ analytics.kpis.revenue.projected | currency: analytics.currency:'symbol':'1.0-0' }} EOD</p>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Avg Stay Duration</span>
+          <span class="icon">🕒</span>
+        </div>
+        <div class="kpi-main">
+          <h2>{{ analytics.kpis.stayDuration.hours }}h {{ analytics.kpis.stayDuration.minutes }}m
+            @if (analytics.kpis.stayDuration.trend !== 0) {
+              <span class="trend negative">{{ analytics.kpis.stayDuration.trend }}%</span>
+            }
+          </h2>
+        </div>
+        <div class="kpi-footer">
+          <p>Peak: {{ analytics.kpis.stayDuration.peakTime }}</p>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>System Health</span>
+          <span class="icon">✔</span>
+        </div>
+        <div class="kpi-main">
+          <h2>{{ analytics.kpis.systemHealth.uptime }}%</h2>
+        </div>
+        <div class="kpi-footer">
+          <p><span class="dot online"></span> {{ analytics.kpis.systemHealth.status }}</p>
+          <p class="sub-text">Last Scan: {{ analytics.kpis.systemHealth.lastScan }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="middle-row">
+      <div class="panel chart-panel">
+        <div class="panel-header">
+          <h3>Revenue / Occupancy Trends</h3>
+          <div class="toggle-group">
+            <button>Day</button>
+            <button class="active">Week</button>
+            <button>Month</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <div echarts [options]="chartOptions()" class="echarts-instance"></div>
+        </div>
+      </div>
+
+      <div class="panel density-panel">
+        <div class="panel-header">
+          <h3>Zone Density</h3>
+          <span class="icon">🗺</span>
+        </div>
+        <div class="density-content">
+          @if (analytics.zones.length === 0) {
+            <p class="empty mono">No heatmap data for the selected period.</p>
+          }
+          @for (zone of analytics.zones; track zone.name) {
+            <div class="zone-pill" [class.critical]="zone.status === 'critical'">
+              <span class="dot"></span> {{ zone.name }}: {{ zone.occupancyPercent }}%
+            </div>
+          }
+        </div>
+        <button class="btn-outline">OPEN FLOOR VIEW</button>
+      </div>
+    </section>
+
+    <section class="panel feed-panel">
+      <div class="panel-header">
+        <h3>Live Activity Feed</h3>
+        <div class="legend">
+          <span class="dot online"></span> Success
+          <span class="dot alert"></span> Alert
+        </div>
+      </div>
+      <div class="table-container">
+        @if (analytics.recentEvents.length === 0) {
+          <p class="empty mono">No events yet — connect /api/v1/access/events to populate this feed.</p>
+        } @else {
+          <table>
+            <thead>
+              <tr>
+                <th>EVENT ID</th>
+                <th>TIMESTAMP</th>
+                <th>LOCATION</th>
+                <th>PLATE / ID</th>
+                <th>ACTION</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (event of analytics.recentEvents; track event.eventId) {
+                <tr>
+                  <td class="mono">{{ event.eventId }}</td>
+                  <td class="mono">{{ event.timestamp }}</td>
+                  <td>{{ event.location }}</td>
+                  <td class="bold">{{ event.plateOrId }}</td>
+                  <td>{{ event.action }}</td>
+                  <td [ngClass]="event.status.toLowerCase()" class="bold">{{ event.status }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
         }
       </div>
-      <button class="btn-outline">OPEN FLOOR VIEW</button>
-    </div>
-  </section>
-
-  <section class="panel feed-panel">
-    <div class="panel-header">
-      <h3>Live Activity Feed</h3>
-      <div class="legend">
-        <span class="dot online"></span> Success
-        <span class="dot alert"></span> Alert
-      </div>
-    </div>
-    <div class="table-container">
-      <table>
-        <thead>
-        <tr>
-          <th>EVENT ID</th>
-          <th>TIMESTAMP</th>
-          <th>LOCATION</th>
-          <th>PLATE / ID</th>
-          <th>ACTION</th>
-          <th>STATUS</th>
-        </tr>
-        </thead>
-        <tbody>
-          @for (event of analytics.recentEvents; track event.eventId) {
-            <tr>
-              <td class="mono">{{ event.eventId }}</td>
-              <td class="mono">{{ event.timestamp }}</td>
-              <td>{{ event.location }}</td>
-              <td class="bold">{{ event.plateOrId }}</td>
-              <td>{{ event.action }}</td>
-              <td [ngClass]="event.status.toLowerCase()" class="bold">{{ event.status }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    <button class="btn-text">VIEW FULL EVENT LOG</button>
-  </section>
-</div>
+      <button class="btn-text">VIEW FULL EVENT LOG</button>
+    </section>
+  </div>
+}

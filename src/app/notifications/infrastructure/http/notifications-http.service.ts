@@ -1,146 +1,108 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable, map, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
-import { Notification, NotificationPreference, SystemHealthMetric, ActivityLogItem } from '../../domain/models/notification.models';
-import { NotificationType, NotificationStatus, NotificationSeverity, NotificationChannel } from '../../domain/enums/notification.enums';
-import { isUnreadStatus, severityFromNotificationType } from '../../domain/utils/notification-display.utils';
+import { environment } from '../../../../environments/environment';
+import {
+  ActivityLogItem,
+  Notification,
+  NotificationPreference,
+  SystemHealthMetric,
+} from '../../domain/models/notification.models';
+import {
+  NotificationChannel,
+  NotificationStatus,
+  NotificationType,
+} from '../../domain/enums/notification.enums';
+import { severityFromNotificationType } from '../../domain/utils/notification-display.utils';
 
-/**
- * Notifications API seam. Replace `of(...).pipe(delay())` with `HttpClient` calls
- * (e.g. `environment.apiUrl + '/api/v1/notifications'`) when the backend is available.
- * Real-time updates can later subscribe to WebSocket/STOMP and push into the same store.
- */
-@Injectable({
-  providedIn: 'root',
-})
+interface NotificationResource {
+  id: number;
+  userId: number;
+  type: string;
+  title: string;
+  body: string;
+  status: string;
+  channel: string;
+  createdAt: string | null;
+  readAt: string | null;
+}
+
+interface NotificationPreferenceResource {
+  notificationType: string;
+  enabled: boolean;
+}
+
+@Injectable({ providedIn: 'root' })
 export class NotificationsHttpService {
-  private mockNotifications: Notification[] = [
-    {
-      id: 'notif-1',
-      userId: 'user-1',
-      type: NotificationType.EMERGENCY_ALERT,
-      title: 'Facility lockdown',
-      body: 'Sector C is under lockdown due to an unresolved security event.',
-      data: { sector: 'C', eventId: 'SEC-9901' },
-      status: NotificationStatus.DELIVERED,
-      severity: severityFromNotificationType(NotificationType.EMERGENCY_ALERT),
-      channel: NotificationChannel.IN_APP,
-      sentAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-      createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-      updatedAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-    },
-    {
-      id: 'notif-2',
-      userId: 'user-1',
-      type: NotificationType.PAYMENT_SUCCESS,
-      title: 'Payment confirmed',
-      body: 'Payment of $12.50 for session #492 has been processed.',
-      data: { amount: 12.5, sessionId: '492' },
-      status: NotificationStatus.DELIVERED,
-      severity: severityFromNotificationType(NotificationType.PAYMENT_SUCCESS),
-      channel: NotificationChannel.IN_APP,
-      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    },
-    {
-      id: 'notif-3',
-      userId: 'user-1',
-      type: NotificationType.PAYMENT_FAILED,
-      title: 'Payment failed',
-      body: 'Card charge for session #488 was declined by the issuer.',
-      data: { amount: 8.0, sessionId: '488' },
-      status: NotificationStatus.DELIVERED,
-      severity: severityFromNotificationType(NotificationType.PAYMENT_FAILED),
-      channel: NotificationChannel.IN_APP,
-      sentAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-      createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-      updatedAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    },
-    {
-      id: 'notif-4',
-      userId: 'user-1',
-      type: NotificationType.PAYMENT_REMINDER,
-      title: 'Payment reminder',
-      body: 'Session #501 will expire in 15 minutes with an unpaid balance.',
-      data: { sessionId: '501' },
-      status: NotificationStatus.SENT,
-      severity: severityFromNotificationType(NotificationType.PAYMENT_REMINDER),
-      channel: NotificationChannel.IN_APP,
-      sentAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-      createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-      updatedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-    },
-    {
-      id: 'notif-5',
-      userId: 'user-1',
-      type: NotificationType.ENTRY_CONFIRMED,
-      title: 'Entry confirmed',
-      body: 'Vehicle LPR-9021 authorized at North gate.',
-      data: { gate: 'North', plate: 'LPR-9021' },
-      status: NotificationStatus.READ,
-      severity: severityFromNotificationType(NotificationType.ENTRY_CONFIRMED),
-      channel: NotificationChannel.IN_APP,
-      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-      readAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    },
-    {
-      id: 'notif-6',
-      userId: 'user-1',
-      type: NotificationType.SESSION_END,
-      title: 'Session ended',
-      body: 'Parking session #480 closed. Duration 1h 12m.',
-      data: { sessionId: '480' },
-      status: NotificationStatus.READ,
-      severity: severityFromNotificationType(NotificationType.SESSION_END),
-      channel: NotificationChannel.IN_APP,
-      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 30).toISOString(),
-      readAt: new Date(Date.now() - 1000 * 60 * 60 * 29).toISOString(),
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 30).toISOString(),
-      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 29).toISOString(),
-    },
-    {
-      id: 'notif-7',
-      userId: 'user-1',
-      type: NotificationType.SYSTEM_ALERT,
-      title: 'High latency detected',
-      body: 'Node DX-4092 reported 250ms average round-trip.',
-      data: { nodeId: 'DX-4092', latency: 250 },
-      status: NotificationStatus.READ,
-      severity: severityFromNotificationType(NotificationType.SYSTEM_ALERT),
-      channel: NotificationChannel.IN_APP,
-      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      readAt: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(),
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(),
-    },
-    {
-      id: 'notif-8',
-      userId: 'user-1',
-      type: NotificationType.ENTRY_CONFIRMED,
-      title: 'Delivery channel failure',
-      body: 'Push delivery to device token ****91 failed after retries.',
-      data: { channel: 'PUSH' },
-      status: NotificationStatus.FAILED,
-      severity: NotificationSeverity.WARNING,
-      channel: NotificationChannel.PUSH,
-      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-    },
-  ];
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiBaseUrl}${environment.apiPrefix}`;
 
-  private mockPreferences: NotificationPreference[] = [
-    { notificationType: NotificationType.EMERGENCY_ALERT, enabled: true, locked: true },
-    { notificationType: NotificationType.PAYMENT_SUCCESS, enabled: true },
-    { notificationType: NotificationType.PAYMENT_FAILED, enabled: true },
-    { notificationType: NotificationType.PAYMENT_REMINDER, enabled: false },
-    { notificationType: NotificationType.ENTRY_CONFIRMED, enabled: true },
-    { notificationType: NotificationType.SESSION_END, enabled: true },
-    { notificationType: NotificationType.SYSTEM_ALERT, enabled: true },
-  ];
+  /** GET /api/v1/notifications/user/{userId} */
+  getNotifications(userId: number): Observable<Notification[]> {
+    return this.http
+      .get<NotificationResource[]>(`${this.baseUrl}/notifications/user/${userId}`)
+      .pipe(map((resources) => resources.map(toNotification)));
+  }
+
+  /** GET /api/v1/notifications/user/{userId}/unread */
+  getUnreadNotifications(userId: number): Observable<Notification[]> {
+    return this.http
+      .get<NotificationResource[]>(`${this.baseUrl}/notifications/user/${userId}/unread`)
+      .pipe(map((resources) => resources.map(toNotification)));
+  }
+
+  /** PATCH /api/v1/notifications/{id}/read */
+  markAsRead(notificationId: string): Observable<void> {
+    return this.http.patch<void>(
+      `${this.baseUrl}/notifications/${notificationId}/read`,
+      {}
+    );
+  }
+
+  /** Alias for ack — backend treats it the same as READ. */
+  acknowledge(notificationId: string): Observable<void> {
+    return this.markAsRead(notificationId);
+  }
+
+  /**
+   * Backend has no DELETE/dismiss endpoint yet, so we mark as read and let the
+   * store filter the notification from the inbox locally.
+   */
+  dismiss(notificationId: string): Observable<void> {
+    return this.markAsRead(notificationId);
+  }
+
+  /** GET /api/v1/users/{userId}/notification-preferences */
+  getPreferences(userId: number): Observable<NotificationPreference[]> {
+    return this.http
+      .get<NotificationPreferenceResource[]>(
+        `${this.baseUrl}/users/${userId}/notification-preferences`
+      )
+      .pipe(map((resources) => resources.map(toPreference)));
+  }
+
+  /** PUT /api/v1/users/{userId}/notification-preferences */
+  updatePreferences(
+    userId: number,
+    preferences: NotificationPreference[]
+  ): Observable<NotificationPreference[]> {
+    const payload = {
+      preferences: preferences.map((p) => ({
+        notificationType: p.notificationType,
+        enabled: p.enabled,
+      })),
+    };
+    return this.http
+      .put<void>(`${this.baseUrl}/users/${userId}/notification-preferences`, payload)
+      .pipe(map(() => preferences));
+  }
+
+  // -------------------------------------------------------------------------
+  // System health & activity log: backend doesn't expose these endpoints yet.
+  // Keeping client-side synthetic data so the panel keeps working until the
+  // ops/observability endpoints are added.
+  // -------------------------------------------------------------------------
 
   private mockSystemHealth: SystemHealthMetric[] = [
     { id: 'sh-1', name: 'Data ingestion', value: 99.8, unit: '%', status: 'online', trend: 'stable', lastUpdated: new Date().toISOString() },
@@ -158,58 +120,7 @@ export class NotificationsHttpService {
     { id: 'act-4', title: 'Cache flush', message: 'LRU cache flushed (20MB).', timestamp: new Date(Date.now() - 45000).toISOString(), status: 'info' },
   ];
 
-  /** GET /api/v1/notifications/user/{userId} */
-  getNotifications(userId: string): Observable<Notification[]> {
-    return of([...this.mockNotifications]).pipe(delay(400));
-  }
-
-  /** GET /api/v1/notifications/user/{userId}/unread */
-  getUnreadNotifications(userId: string): Observable<Notification[]> {
-    const unread = this.mockNotifications.filter((n) => isUnreadStatus(n.status));
-    return of(unread).pipe(delay(300));
-  }
-
-  /** PATCH /api/v1/notifications/{id}/read */
-  markAsRead(notificationId: string): Observable<Notification> {
-    const notif = this.mockNotifications.find((n) => n.id === notificationId);
-    if (!notif) return throwError(() => new Error('Notification not found'));
-
-    const updated: Notification = {
-      ...notif,
-      status: NotificationStatus.READ,
-      readAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    this.mockNotifications = this.mockNotifications.map((n) => (n.id === notificationId ? updated : n));
-
-    return of(updated).pipe(delay(200));
-  }
-
-  /** PATCH /api/v1/notifications/{id}/acknowledge — backend may reuse READ; same effect in mock. */
-  acknowledge(notificationId: string): Observable<Notification> {
-    return this.markAsRead(notificationId);
-  }
-
-  /** PATCH /api/v1/notifications/{id}/dismiss — until archive/DELETE exists, client removes from inbox in mock. */
-  dismiss(notificationId: string): Observable<void> {
-    const idx = this.mockNotifications.findIndex((n) => n.id === notificationId);
-    if (idx === -1) return throwError(() => new Error('Notification not found'));
-    this.mockNotifications.splice(idx, 1);
-    return of(undefined).pipe(delay(200));
-  }
-
-  /** GET /api/v1/users/{userId}/notification-preferences */
-  getPreferences(userId: string): Observable<NotificationPreference[]> {
-    return of([...this.mockPreferences]).pipe(delay(300));
-  }
-
-  /** PUT /api/v1/users/{userId}/notification-preferences */
-  updatePreferences(userId: string, preferences: NotificationPreference[]): Observable<NotificationPreference[]> {
-    this.mockPreferences = [...preferences];
-    return of(this.mockPreferences).pipe(delay(400));
-  }
-
-  /** GET /api/v1/operations/health-metrics (mock path; align with real ops endpoint later). */
+  /** TODO: replace with /api/v1/operations/health-metrics when available. */
   getSystemHealth(): Observable<SystemHealthMetric[]> {
     const randomized = this.mockSystemHealth.map((sh) => {
       if (sh.name === 'Compute load') {
@@ -234,8 +145,45 @@ export class NotificationsHttpService {
     return of(randomized).pipe(delay(200));
   }
 
-  /** GET /api/v1/operations/activity-log */
+  /** TODO: replace with /api/v1/operations/activity-log when available. */
   getActivityLogs(): Observable<ActivityLogItem[]> {
     return of([...this.mockActivityLogs]).pipe(delay(200));
   }
+}
+
+function toNotification(resource: NotificationResource): Notification {
+  const type = parseEnum<NotificationType>(resource.type, NotificationType.SYSTEM_ALERT);
+  const status = parseEnum<NotificationStatus>(resource.status, NotificationStatus.DELIVERED);
+  const channel = parseEnum<NotificationChannel>(resource.channel, NotificationChannel.IN_APP);
+  const createdAt = resource.createdAt ?? new Date().toISOString();
+
+  return {
+    id: String(resource.id),
+    userId: String(resource.userId),
+    type,
+    title: resource.title,
+    body: resource.body,
+    data: null,
+    status,
+    severity: severityFromNotificationType(type),
+    channel,
+    sentAt: createdAt,
+    readAt: resource.readAt ?? undefined,
+    createdAt,
+    updatedAt: resource.readAt ?? createdAt,
+  };
+}
+
+function toPreference(resource: NotificationPreferenceResource): NotificationPreference {
+  const type = parseEnum<NotificationType>(resource.notificationType, NotificationType.SYSTEM_ALERT);
+  return {
+    notificationType: type,
+    enabled: resource.enabled,
+    locked: type === NotificationType.EMERGENCY_ALERT,
+  };
+}
+
+function parseEnum<T extends string>(value: string | null | undefined, fallback: T): T {
+  if (!value) return fallback;
+  return value as T;
 }

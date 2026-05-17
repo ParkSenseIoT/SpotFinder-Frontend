@@ -1,0 +1,109 @@
+<div class="reports-page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Reports</h2>
+      <p class="page-subtitle">
+        Generate occupancy, revenue, peak-hours and heatmap PDF reports (US13).
+      </p>
+    </div>
+    <button type="button" class="btn-outline" (click)="refresh()">Refresh</button>
+  </header>
+
+  @if (store.error()) {
+    <div class="banner banner--warning">
+      <span>⚠ {{ store.error() }}</span>
+      <button type="button" class="btn-link" (click)="store.clearError()">Dismiss</button>
+    </div>
+  }
+
+  <section class="panel">
+    <div class="panel-header">
+      <h3>Generate new report</h3>
+      <span class="legend mono">POST /reports</span>
+    </div>
+    <div class="panel-body">
+      <form class="form-grid" [formGroup]="form" (ngSubmit)="submit()">
+        <label class="field">
+          <span class="label">Report type</span>
+          <select formControlName="reportType">
+            @for (type of reportTypes; track type) {
+              <option [value]="type">{{ type.replace('_', ' ') }}</option>
+            }
+          </select>
+        </label>
+        <label class="field">
+          <span class="label">Start date</span>
+          <input type="date" formControlName="startDate" />
+        </label>
+        <label class="field">
+          <span class="label">End date</span>
+          <input type="date" formControlName="endDate" />
+        </label>
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="store.isGenerating()">
+          {{ store.isGenerating() ? 'Generating…' : 'Queue report' }}
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h3>Generated reports</h3>
+      <span class="legend mono">{{ store.reports().length }} total</span>
+    </div>
+    <div class="panel-body table-wrap">
+      @if (store.isLoading()) {
+        <p class="empty mono">Loading reports…</p>
+      } @else if (store.reports().length === 0) {
+        <p class="empty mono">
+          No reports generated yet. Use the form above to queue your first one.
+        </p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Type</th>
+              <th>Period</th>
+              <th>Generated</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (report of store.reports(); track report.id) {
+              <tr>
+                <td class="mono">{{ report.id }}</td>
+                <td class="bold">{{ report.reportType.replace('_', ' ') }}</td>
+                <td class="mono">
+                  {{ report.periodStart ?? '—' }} → {{ report.periodEnd ?? '—' }}
+                </td>
+                <td class="mono">
+                  {{ report.generatedAt ? (report.generatedAt | date: 'short') : '—' }}
+                </td>
+                <td>
+                  <span class="badge" [attr.data-state]="report.status">
+                    {{ report.status }}
+                  </span>
+                </td>
+                <td>
+                  @if (report.status === 'READY') {
+                    <button
+                      type="button"
+                      class="btn-link"
+                      (click)="download(report)">
+                      Download PDF
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </section>
+</div>

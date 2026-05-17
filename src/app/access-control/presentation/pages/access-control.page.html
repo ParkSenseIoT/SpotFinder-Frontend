@@ -1,0 +1,257 @@
+<div class="access-control-page">
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Access Control</h2>
+      <p class="page-subtitle">
+        Vehicle entry / exit (ALPR), live sessions and history for the
+        authenticated operator's vehicles.
+      </p>
+    </div>
+    <button type="button" class="btn-outline" (click)="reloadHistory()">
+      Refresh
+    </button>
+  </header>
+
+  @if (store.error()) {
+    <div class="banner banner--warning">
+      <span>⚠ {{ store.error() }}</span>
+      <button type="button" class="btn-link" (click)="store.clearError()">Dismiss</button>
+    </div>
+  }
+
+  <nav class="tabs" aria-label="Access control sections">
+    <button
+      type="button"
+      [class.active]="activeTab() === 'sessions'"
+      (click)="setTab('sessions')">
+      Sessions
+    </button>
+    <button
+      type="button"
+      [class.active]="activeTab() === 'alpr'"
+      (click)="setTab('alpr')">
+      ALPR test
+    </button>
+    <button
+      type="button"
+      [class.active]="activeTab() === 'manual'"
+      (click)="setTab('manual')">
+      Manual entry / exit
+    </button>
+  </nav>
+
+  @if (activeTab() === 'sessions') {
+    <section class="panel">
+      <div class="panel-header">
+        <h3>Current session</h3>
+        <span class="legend mono">/parking-sessions/active</span>
+      </div>
+      <div class="panel-body">
+        @if (store.activeSession(); as session) {
+          <div class="active-session">
+            <div class="metric">
+              <span class="label">Plate</span>
+              <span class="value">{{ session.licensePlate }}</span>
+            </div>
+            <div class="metric">
+              <span class="label">Slot</span>
+              <span class="value">{{ session.slotId ?? '—' }}</span>
+            </div>
+            <div class="metric">
+              <span class="label">Duration</span>
+              <span class="value">{{ session.currentDuration }}</span>
+            </div>
+            <div class="metric">
+              <span class="label">Payment</span>
+              <span class="badge" [attr.data-state]="session.paymentStatus">
+                {{ session.paymentStatus }}
+              </span>
+            </div>
+            <button
+              type="button"
+              class="btn-primary"
+              (click)="store.endSession(session.id)">
+              End session
+            </button>
+          </div>
+        } @else {
+          @if (store.isLoadingActive()) {
+            <p class="empty mono">Checking active session…</p>
+          } @else {
+            <p class="empty mono">No active session for this account.</p>
+          }
+        }
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h3>Session history</h3>
+        <span class="legend mono">{{ store.sessionHistory().length }} total</span>
+      </div>
+      <div class="panel-body table-wrap">
+        @if (store.isLoadingHistory()) {
+          <p class="empty mono">Loading history…</p>
+        } @else if (store.sessionHistory().length === 0) {
+          <p class="empty mono">
+            No sessions yet. Admin users without parking activity see this view
+            empty — backend exposes per-user history only.
+          </p>
+        } @else {
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Plate</th>
+                <th>Slot</th>
+                <th>Entry</th>
+                <th>Exit</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (session of store.sessionHistory(); track session.id) {
+                <tr>
+                  <td class="mono">{{ session.id }}</td>
+                  <td class="bold">{{ session.licensePlate }}</td>
+                  <td>{{ session.slotId ?? '—' }}</td>
+                  <td class="mono">
+                    {{ session.entryTimestamp ? (session.entryTimestamp | date: 'short') : '—' }}
+                  </td>
+                  <td class="mono">
+                    {{ session.exitTimestamp ? (session.exitTimestamp | date: 'short') : '—' }}
+                  </td>
+                  <td>
+                    <span class="badge" [attr.data-state]="session.sessionStatus">
+                      {{ session.sessionStatus }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge" [attr.data-state]="session.paymentStatus">
+                      {{ session.paymentStatus }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (session.sessionStatus === 'ACTIVE') {
+                      <button
+                        type="button"
+                        class="btn-link"
+                        (click)="store.endSession(session.id)">
+                        End
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </section>
+  }
+
+  @if (activeTab() === 'alpr') {
+    <section class="panel">
+      <div class="panel-header">
+        <h3>ALPR — plate recognition test</h3>
+        <span class="legend mono">POST /access/alpr</span>
+      </div>
+      <div class="panel-body">
+        <form class="form-grid" [formGroup]="alprForm" (ngSubmit)="runAlpr()">
+          <label class="field">
+            <span class="label">Image (base64)</span>
+            <textarea formControlName="imageData" rows="3" placeholder="data:image/jpeg;base64,…"></textarea>
+            @if (alprForm.controls.imageData.touched && alprForm.controls.imageData.invalid) {
+              <small class="error">Image payload is required.</small>
+            }
+          </label>
+          <label class="field">
+            <span class="label">Camera position</span>
+            <select formControlName="cameraPosition">
+              <option value="ENTRY">Entry</option>
+              <option value="EXIT">Exit</option>
+            </select>
+          </label>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="store.isProcessingAlpr()">
+            {{ store.isProcessingAlpr() ? 'Processing…' : 'Recognize plate' }}
+          </button>
+        </form>
+
+        @if (store.lastPlateResult(); as result) {
+          <div class="alpr-result">
+            <div class="metric">
+              <span class="label">Plate</span>
+              <span class="value">{{ result.licensePlate }}</span>
+            </div>
+            <div class="metric">
+              <span class="label">Confidence</span>
+              <span class="value">{{ result.confidence | percent: '1.0-2' }}</span>
+            </div>
+            <span
+              class="badge"
+              [attr.data-state]="result.isHighConfidence ? 'PAID' : 'PENDING'">
+              {{ result.isHighConfidence ? 'High confidence' : 'Low confidence' }}
+            </span>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  @if (activeTab() === 'manual') {
+    <section class="panel">
+      <div class="panel-header">
+        <h3>Register entry</h3>
+        <span class="legend mono">POST /access/entries</span>
+      </div>
+      <div class="panel-body">
+        <form class="form-grid" [formGroup]="entryForm" (ngSubmit)="registerEntry()">
+          <label class="field">
+            <span class="label">Image (base64)</span>
+            <textarea formControlName="imageData" rows="3"></textarea>
+          </label>
+          <label class="field">
+            <span class="label">Barrier code</span>
+            <input type="text" formControlName="barrierCode" />
+          </label>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="store.isProcessingEntry()">
+            {{ store.isProcessingEntry() ? 'Processing…' : 'Open barrier (entry)' }}
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h3>Register exit</h3>
+        <span class="legend mono">POST /access/exits</span>
+      </div>
+      <div class="panel-body">
+        <form class="form-grid" [formGroup]="exitForm" (ngSubmit)="registerExit()">
+          <label class="field">
+            <span class="label">Image (base64)</span>
+            <textarea formControlName="imageData" rows="3"></textarea>
+          </label>
+          <label class="field">
+            <span class="label">Barrier code</span>
+            <input type="text" formControlName="barrierCode" />
+          </label>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="store.isProcessingEntry()">
+            {{ store.isProcessingEntry() ? 'Processing…' : 'Verify payment & open exit' }}
+          </button>
+        </form>
+      </div>
+    </section>
+  }
+</div>

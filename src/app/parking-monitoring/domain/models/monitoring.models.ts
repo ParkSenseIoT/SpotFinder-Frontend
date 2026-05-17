@@ -1,10 +1,15 @@
+export type ParkingSlotStatus = 'AVAILABLE' | 'OCCUPIED' | 'OUT_OF_SERVICE';
+
 export interface LiveParkingSlot {
   id: number;
-  code: string; // Ej: "A-01"
-  status: 'AVAILABLE' | 'OCCUPIED' | 'OUT_OF_SERVICE';
+  code: string;
+  status: ParkingSlotStatus;
   floor: number;
-  currentPlate?: string; // Viene de la tabla Vehicle
-  entryTime?: string;    // Viene de ParkingSession (ISO String)
+  sensorId?: string;
+  facilityId?: number;
+  lastUpdated?: string;
+  currentPlate?: string;
+  entryTime?: string;
 }
 
 export interface SectorGroup {
@@ -13,4 +18,20 @@ export interface SectorGroup {
   slots: LiveParkingSlot[];
   occupiedCount: number;
   totalCount: number;
+}
+
+export interface OccupancySummary {
+  total: number;
+  available: number;
+  occupied: number;
+  occupancyRate: number;
+}
+
+export interface ParkingSlotResource {
+  id: number;
+  slotCode: string;
+  status: string;
+  sensorId: string | null;
+  facilityId: number | null;
+  lastUpdated: string | null;
 }

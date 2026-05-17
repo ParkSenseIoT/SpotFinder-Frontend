@@ -30,4 +30,43 @@ export interface AnalyticsData {
   trends: TrendEntry[];
   zones: ZoneDensity[];
   recentEvents: ActivityEvent[];
+  currency: string;
+}
+
+export interface OccupancyMetricsResource {
+  averageOccupancyRate: number;
+  peakHours: number[];
+  turnoverRate: number;
+  dataByHour: Record<string, number>;
+  totalSlots: number;
+  periodStart: string;
+  periodEnd: string;
+}
+
+export interface RevenueMetricsResource {
+  totalRevenue: number;
+  averageTicket: number;
+  totalTransactions: number;
+  paymentsByMethod: Record<string, number>;
+  dataByDay: Record<string, number>;
+  currency: string;
+}
+
+export interface HeatmapEntryResource {
+  slotId: number;
+  slotCode: string;
+  usageCount: number;
+  averageDurationMinutes: number;
+}
+
+export interface PeakHoursResource {
+  peakHours: number[];
+  occupancyByHour: Record<string, number>;
+  busiestDay: string;
+}
+
+export interface AnalyticsQueryParams {
+  startDate?: string;
+  endDate?: string;
+  facilityId?: number;
 }
