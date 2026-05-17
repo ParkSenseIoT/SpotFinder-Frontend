@@ -37,9 +37,7 @@
         <span class="legend mono">PUT /users/&#123;id&#125;</span>
       </div>
       <div class="panel-body">
-        @if (store.isLoadingProfile()) {
-          <p class="empty mono">Loading profile…</p>
-        } @else if (store.profile(); as profile) {
+        @if (store.profile(); as profile) {
           <p class="profile-meta mono">
             {{ profile.email }} · roles: {{ profile.roles.join(', ') || '—' }}
           </p>
@@ -62,6 +60,8 @@
           @if (store.profileMessage()) {
             <p class="status-text mono success">{{ store.profileMessage() }}</p>
           }
+        } @else if (store.isLoadingProfile()) {
+          <p class="empty mono">Loading profile…</p>
         }
       </div>
     </section>
